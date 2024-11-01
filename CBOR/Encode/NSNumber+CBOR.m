@@ -1,0 +1,224 @@
+// refer: https://github.com/DanielHusx/CBOR
+//
+// MIT License
+//
+// Copyright (c) 2024 Daniel
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+//
+
+#import "NSNumber+CBOR.h"
+#import "CBORNumber.h"
+#import "CBORSimple.h"
+#import "CBORTag.h"
+
+/// NSNumber内值编码类型
+typedef NS_ENUM(NSUInteger, CBORNumberEncodingType) {
+    /// 未知类型
+    CBORNumberEncodingTypeUnknown,
+    /// (signed) char, Bool
+    CBORNumberEncodingTypeCharOrBool,
+    /// unsigned char, UInt8
+    CBORNumberEncodingTypeUnsignedChar,
+    
+    /// (signed) short
+    CBORNumberEncodingTypeShort,
+    /// unsigned short, UInt16
+    CBORNumberEncodingTypeUnsignedShort,
+    
+    /// (signed) int
+    CBORNumberEncodingTypeInt,
+    /// unsigned int
+    CBORNumberEncodingTypeUnsignedInt,
+    
+    /// long, long long, NSInteger
+    CBORNumberEncodingTypeLong,
+    /// unsigned long, UInt32, UInt64
+    CBORNumberEncodingTypeUnsignedLong,
+    
+    /// float Float32
+    CBORNumberEncodingTypeFloat,
+    /// double Float64
+    CBORNumberEncodingTypeDouble,
+};
+
+/// 读取NSNumber内的值类型
+static CBORNumberEncodingType CBORNumberEncodingTypeWithNumber(NSNumber *number) {
+    NSString *typeString = [NSString stringWithFormat:@"%s", [number objCType]];
+    
+    static NSDictionary *typeMap;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        typeMap = @{
+            [NSString stringWithFormat:@"%s", @encode(char)]: @(CBORNumberEncodingTypeCharOrBool),
+            [NSString stringWithFormat:@"%s", @encode(unsigned char)]: @(CBORNumberEncodingTypeUnsignedChar),
+            
+            [NSString stringWithFormat:@"%s", @encode(short)]: @(CBORNumberEncodingTypeShort),
+            [NSString stringWithFormat:@"%s", @encode(unsigned short)]: @(CBORNumberEncodingTypeUnsignedShort),
+            
+            [NSString stringWithFormat:@"%s", @encode(int)]: @(CBORNumberEncodingTypeInt),
+            [NSString stringWithFormat:@"%s", @encode(unsigned int)]: @(CBORNumberEncodingTypeUnsignedInt),
+            
+            [NSString stringWithFormat:@"%s", @encode(long)]: @(CBORNumberEncodingTypeLong),
+            [NSString stringWithFormat:@"%s", @encode(unsigned long)]: @(CBORNumberEncodingTypeUnsignedLong),
+            
+            [NSString stringWithFormat:@"%s", @encode(float)]: @(CBORNumberEncodingTypeFloat),
+            [NSString stringWithFormat:@"%s", @encode(double)]: @(CBORNumberEncodingTypeDouble),
+            
+        };
+    });
+    
+    NSNumber *type = typeMap[typeString];
+    if (type) { return [type unsignedLongValue]; }
+    
+    return CBORNumberEncodingTypeUnknown;
+}
+
+/// 判断浮点数是否可用半精度表示
+static inline bool CBORIsHalfValue(float value) {
+    int intValue = (int)floorf(value);
+    // 确定没有小数点
+    if (intValue != value) { return false; }
+    // 确定在区间内
+    return intValue >= CBORHalfValueMin && intValue <= CBORHalfValueMax;
+}
+
+@implementation NSNumber (CBOR)
+
+- (nullable CBORObject *)cborObject {
+    CBORNumberEncodingType type = CBORNumberEncodingTypeWithNumber(self);
+    if (type == CBORNumberEncodingTypeUnknown) { return nil; }
+    
+    switch (type) {
+        case CBORNumberEncodingTypeFloat:
+            // 判断是否是半精度
+            if (CBORIsHalfValue([self floatValue])) {
+                return [[CBORNumber alloc] initWithMajor:CBORMajorTypeAdditional
+                                                   minor:CBORAdditionalTypeHalf
+                                           unsignedValue:[self unsignedLongLongValue]];
+            }
+           
+            return [[CBORNumber alloc] initWithMajor:CBORMajorTypeAdditional
+                                               minor:CBORAdditionalTypeFloat
+                                          floatValue:[self floatValue]];
+        case CBORNumberEncodingTypeDouble:
+            return [[CBORNumber alloc] initWithMajor:CBORMajorTypeAdditional
+                                               minor:CBORAdditionalTypeDouble
+                                          floatValue:[self doubleValue]];
+        case CBORNumberEncodingTypeCharOrBool: {
+            return [[CBORSimple alloc] initWithMajor:CBORMajorTypeAdditional
+                                               minor:[self boolValue] ? CBORAdditionalTypeTrue: CBORAdditionalTypeFalse];
+        case CBORNumberEncodingTypeUnsignedChar:
+        case CBORNumberEncodingTypeUnsignedShort:
+        case CBORNumberEncodingTypeUnsignedInt:
+        case CBORNumberEncodingTypeUnsignedLong: {
+            // 正整数
+            UInt64 value = [self unsignedLongLongValue];
+            return [[CBORNumber alloc] initWithMajor:CBORMajorTypeUnsigned
+                                       unsignedValue:value];
+        }
+        default: {
+            UInt64 value = [self unsignedLongLongValue];
+            if ([self longLongValue] >= 0) {
+                // 正整数
+                return [[CBORNumber alloc] initWithMajor:CBORMajorTypeUnsigned
+                                           unsignedValue:value];
+            } else {
+                // 负整数
+                value = ~value;
+                return [[CBORNumber alloc] initWithMajor:CBORMajorTypeNegative
+                                           unsignedValue:value];
+            }
+        }
+        }
+    }
+    return nil;
+}
+
+- (nullable CBORObject *)cborObjectWithMajor:(CBORMajorType)major minor:(CBORUInt64)minor {
+    if (CBORMajorTypeIsUnknown(major)) { return [self cborObject]; }
+    
+    CBORMinorType minorType = CBORTypeMinor(minor);
+    
+    switch (major) {
+        case CBORMajorTypeUnsigned: {
+            // 正整数
+            UInt64 value = [self unsignedLongLongValue];
+            return [[CBORNumber alloc] initWithMajor:CBORMajorTypeUnsigned
+                                       unsignedValue:value];
+        case CBORMajorTypeNegative: {
+            UInt64 value = [self unsignedLongLongValue];
+            
+            if ([self longLongValue] >= 0) {
+                // 正整数
+                return [[CBORNumber alloc] initWithMajor:CBORMajorTypeUnsigned
+                                           unsignedValue:value];
+            } else {
+                // 负整数
+                value = ~value;
+                return [[CBORNumber alloc] initWithMajor:CBORMajorTypeNegative
+                                           unsignedValue:value];
+            }
+        }
+        case CBORMajorTypeAdditional: {
+            switch (minorType) {
+                case CBORAdditionalTypeTrue:
+                case CBORAdditionalTypeFalse:
+                    // 布尔
+                    return [[CBORSimple alloc] initWithMajor:CBORMajorTypeAdditional
+                                                       minor:[self boolValue] ? CBORAdditionalTypeTrue: CBORAdditionalTypeFalse];
+                case CBORAdditionalTypeHalf:
+                    return [[CBORNumber alloc] initWithMajor:major
+                                                       minor:minorType
+                                               unsignedValue:[self longLongValue]];
+                case CBORAdditionalTypeFloat:
+                    return [[CBORNumber alloc] initWithMajor:major
+                                                       minor:minorType
+                                                  floatValue:[self floatValue]];
+                case CBORAdditionalTypeDouble:
+                    return [[CBORNumber alloc] initWithMajor:major
+                                                       minor:minorType
+                                                  floatValue:[self doubleValue]];
+                default: {
+                    UInt64 value = [self unsignedLongLongValue];
+                    if (!CBORIsSimpleValue(value)) { return nil; }
+                    // 简单值
+                    return [[CBORNumber alloc] initWithMajor:major
+                                               unsignedValue:value];
+                }
+            }
+        }
+        case CBORMajorTypeTag: {
+            switch (minor) {
+                case CBORTagTypeEpochBasedDateTime: {
+                    // 时间戳
+                    return [[CBORTag alloc] initWithMajor:major
+                                                      tag:minor
+                                                    value:[self cborObject]];
+                }
+            }
+        }
+        default:
+            return nil;
+        }
+            
+    }
+}
+
+@end
