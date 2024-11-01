@@ -29,35 +29,45 @@
 @implementation NSDictionary (CBOR)
 
 - (nullable CBORObject *)cborObject {
-    return [self cborObjectWithMajor:CBORUnknownMajorType minor:CBORUnknownMinorType context:NULL];
+    return [self cborObjectWithMajor:CBORUnknownMajorType
+                               minor:CBORUnknownMinorType
+                             context:NULL];
 }
 
-- (nullable CBORObject *)cborObjectWithMajor:(CBORMajorType)major minor:(CBORUInt64)minor {
-    return [self cborObjectWithMajor:major minor:minor context:NULL];
+- (nullable CBORObject *)cborObjectWithMajor:(CBORMajorType)major
+                                       minor:(CBORMinorType)minor {
+    return [self cborObjectWithMajor:major
+                               minor:minor
+                             context:NULL];
 }
 
 - (nullable CBORObject *)cborObjectWithMajor:(CBORMajorType)major
                                        minor:(CBORUInt64)minor
                                      context:(CBORObject *(*)(NSObject *, CBORMajorType, CBORUInt64))context {
-    if (CBORMajorTypeIsUnknown(major)) { return [self cborMapWithContext:context]; }
+    if (CBORMajorTypeIsUnknown(major)) {
+        return [self cborMapWithMinor:minor
+                              context:context];
+    }
     
-    switch (major) {
+    CBORMajorType majorType = CBORTypeMajor(major);
+    
+    switch (majorType) {
         case CBORMajorTypeMap:
-            return [self cborMapWithContext:context];
+            return [self cborMapWithMinor:minor context:context];
             // 后续可能有Tag也能使用此类型
         default:
             return nil;
     }
 }
 
-- (CBORObject *)cborMapWithContext:(CBORObject *(*)(NSObject *, CBORMajorType, CBORUInt64))context {
+- (CBORObject *)cborMapWithMinor:(CBORMinorType)minor context:(CBORObject *(*)(NSObject *, CBORMajorType, CBORUInt64))context {
     __block CBORMap *ret = [[CBORMap alloc] initWithMajor:CBORMajorTypeMap
-                                                    minor:[self count]];
+                                                    minor:minor];
     
     [self enumerateKeysAndObjectsUsingBlock:^(NSString *key, id obj, BOOL *stop) {
-        CBORObject *cborKey = context(key, CBORUnknownMajorType, 0);
+        CBORObject *cborKey = context(key, CBORUnknownMajorType, CBORUnknownMinorType);
         if (!cborKey) return;
-        CBORObject *cborValue = context(obj, CBORUnknownMajorType, 0);
+        CBORObject *cborValue = context(obj, CBORUnknownMajorType, CBORUnknownMinorType);
         if (!cborValue) return;
         
         ret[cborKey] = cborValue;

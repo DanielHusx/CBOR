@@ -70,6 +70,7 @@
                     minorMaxValue:(CBORByte)minorMaxValue {
     return [self dataWithLengthOrValue:lengthOrValue
                                  major:self.majorType
+                                 minor:self.minorType
                          minorMaxValue:minorMaxValue
                                    raw:nil];
 }
@@ -78,6 +79,7 @@
                               raw:(nullable NSData *)raw {
     return [self dataWithLengthOrValue:lengthOrValue
                                  major:self.majorType
+                                 minor:self.minorType
                          minorMaxValue:CBORLengthTypeMaxValue
                                    raw:raw];
 }
@@ -85,6 +87,7 @@
 - (NSData *)dataWithLengthOrValue:(CBORUInt64)lengthOrValue {
     return [self dataWithLengthOrValue:lengthOrValue
                                  major:self.majorType
+                                 minor:self.minorType
                          minorMaxValue:CBORLengthTypeMaxValue
                                    raw:nil];
 }
@@ -92,6 +95,7 @@
 - (NSData *)dataWithRaw:(NSData *)raw {
     return [self dataWithLengthOrValue:[raw length]
                                  major:self.majorType
+                                 minor:self.minorType
                          minorMaxValue:CBORLengthTypeMaxValue
                                    raw:raw];
 }
@@ -117,21 +121,22 @@
 ///   - raw: 补充数据
 - (NSData *)dataWithLengthOrValue:(CBORUInt64)lengthOrValue
                             major:(CBORMajorType)major
+                            minor:(CBORMinorType)minor
                     minorMaxValue:(CBORByte)minorMaxValue
                               raw:(nullable NSData *)raw {
     NSMutableData *ret = [NSMutableData data];
     
     /// 此处长度类型即次要类型
-    CBORLengthType minor = CBORLengthTypeWithLength(lengthOrValue, minorMaxValue);
+    CBORLengthType minorType = CBORLengthTypeWithLengthOrMinor(lengthOrValue, minorMaxValue, minor);
     // 校验是否超出可显示范围
     if (!CBORIsLengthTypeValid(minor)) { return nil; }
     
     /// 主要类型 + 次要类型定义后续数据长度
-    CBORByte type = major | minor;
+    CBORByte type = major | minorType;
     
     [ret appendBytes:&type length:1];
     // 大端数据或长度
-    [ret appendData:[self unsignedIntegerDataWithType:minor value:lengthOrValue]];
+    [ret appendData:[self unsignedIntegerDataWithType:minorType value:lengthOrValue]];
     
     if (raw) { [ret appendData:raw]; }
     

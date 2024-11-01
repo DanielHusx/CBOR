@@ -113,7 +113,7 @@ static CBORObject * CBOREncodeObject(NSObject *model, CBORMajorType major, CBORM
                         break;
                     }
                 } else {
-                    subCBOR = [[CBORMap alloc] initWithMajor:CBORMajorTypeMap minor:0];
+                    subCBOR = [[CBORMap alloc] initWithMajor:CBORMajorTypeMap];
                     superCBOR[key] = subCBOR;
                 }
                 superCBOR = (CBORMap *)subCBOR;

@@ -102,6 +102,89 @@ static inline bool CBORIsHalfValue(float value) {
 @implementation NSNumber (CBOR)
 
 - (nullable CBORObject *)cborObject {
+    return [self cborObjectWithMinor:CBORUnknownMinorType];
+}
+
+- (nullable CBORObject *)cborObjectWithMajor:(CBORMajorType)major minor:(CBORMinorType)minor {
+    if (CBORMajorTypeIsUnknown(major)) { return [self cborObject]; }
+    
+    CBORMajorType majorType = CBORTypeMajor(major);
+    
+    switch (majorType) {
+        case CBORMajorTypeUnsigned: {
+            // 正整数
+            UInt64 value = [self unsignedLongLongValue];
+            return [[CBORNumber alloc] initWithMajor:majorType
+                                               minor:minor
+                                       unsignedValue:value];
+        case CBORMajorTypeNegative: {
+            UInt64 value = [self unsignedLongLongValue];
+            
+            if ([self longLongValue] >= 0) {
+                // 正整数
+                return [[CBORNumber alloc] initWithMajor:CBORMajorTypeUnsigned
+                                           unsignedValue:value];
+            } else {
+                // 负整数
+                value = ~value;
+                return [[CBORNumber alloc] initWithMajor:CBORMajorTypeNegative
+                                           unsignedValue:value];
+            }
+        }
+        case CBORMajorTypeAdditional: {
+            CBORMinorType minorType = CBORTypeMinor(minor);
+            
+            switch (minorType) {
+                case CBORAdditionalTypeTrue:
+                case CBORAdditionalTypeFalse:
+                    // 布尔
+                    return [[CBORSimple alloc] initWithMajor:majorType
+                                                       minor:[self boolValue] ? CBORAdditionalTypeTrue: CBORAdditionalTypeFalse];
+                case CBORAdditionalTypeHalf:
+                    return [[CBORNumber alloc] initWithMajor:majorType
+                                                       minor:minorType
+                                               unsignedValue:[self longLongValue]];
+                case CBORAdditionalTypeFloat:
+                    return [[CBORNumber alloc] initWithMajor:majorType
+                                                       minor:minorType
+                                                  floatValue:[self floatValue]];
+                case CBORAdditionalTypeDouble:
+                    return [[CBORNumber alloc] initWithMajor:majorType
+                                                       minor:minorType
+                                                  floatValue:[self doubleValue]];
+                default: {
+                    UInt64 value = [self unsignedLongLongValue];
+                    if (!CBORIsSimpleValue(value)) { return nil; }
+                    // 简单值
+                    return [[CBORNumber alloc] initWithMajor:majorType
+                                               unsignedValue:value];
+                }
+            }
+        }
+        case CBORMajorTypeTag: {
+            CBORTagType tag = minor;
+            CBORMinorType minorType = CBORTypeMinor(major);
+            
+            switch (tag) {
+                case CBORTagTypeEpochBasedDateTime: {
+                    // 时间戳
+                    return [[CBORTag alloc] initWithMajor:majorType
+                                                      tag:tag
+                                                    value:[self cborObjectWithMinor:minorType]];
+                }
+                    // 后续可能更多Tag需要用到此类型
+                default:
+                    return nil;
+            }
+        }
+        default:
+            return nil;
+        }
+            
+    }
+}
+
+- (nullable CBORObject *)cborObjectWithMinor:(CBORMinorType)minor {
     CBORNumberEncodingType type = CBORNumberEncodingTypeWithNumber(self);
     if (type == CBORNumberEncodingTypeUnknown) { return nil; }
     
@@ -131,6 +214,7 @@ static inline bool CBORIsHalfValue(float value) {
             // 正整数
             UInt64 value = [self unsignedLongLongValue];
             return [[CBORNumber alloc] initWithMajor:CBORMajorTypeUnsigned
+                                               minor:minor
                                        unsignedValue:value];
         }
         default: {
@@ -138,11 +222,13 @@ static inline bool CBORIsHalfValue(float value) {
             if ([self longLongValue] >= 0) {
                 // 正整数
                 return [[CBORNumber alloc] initWithMajor:CBORMajorTypeUnsigned
+                                                   minor:minor
                                            unsignedValue:value];
             } else {
                 // 负整数
                 value = ~value;
                 return [[CBORNumber alloc] initWithMajor:CBORMajorTypeNegative
+                                                   minor:minor
                                            unsignedValue:value];
             }
         }
@@ -151,74 +237,5 @@ static inline bool CBORIsHalfValue(float value) {
     return nil;
 }
 
-- (nullable CBORObject *)cborObjectWithMajor:(CBORMajorType)major minor:(CBORUInt64)minor {
-    if (CBORMajorTypeIsUnknown(major)) { return [self cborObject]; }
-    
-    CBORMinorType minorType = CBORTypeMinor(minor);
-    
-    switch (major) {
-        case CBORMajorTypeUnsigned: {
-            // 正整数
-            UInt64 value = [self unsignedLongLongValue];
-            return [[CBORNumber alloc] initWithMajor:CBORMajorTypeUnsigned
-                                       unsignedValue:value];
-        case CBORMajorTypeNegative: {
-            UInt64 value = [self unsignedLongLongValue];
-            
-            if ([self longLongValue] >= 0) {
-                // 正整数
-                return [[CBORNumber alloc] initWithMajor:CBORMajorTypeUnsigned
-                                           unsignedValue:value];
-            } else {
-                // 负整数
-                value = ~value;
-                return [[CBORNumber alloc] initWithMajor:CBORMajorTypeNegative
-                                           unsignedValue:value];
-            }
-        }
-        case CBORMajorTypeAdditional: {
-            switch (minorType) {
-                case CBORAdditionalTypeTrue:
-                case CBORAdditionalTypeFalse:
-                    // 布尔
-                    return [[CBORSimple alloc] initWithMajor:CBORMajorTypeAdditional
-                                                       minor:[self boolValue] ? CBORAdditionalTypeTrue: CBORAdditionalTypeFalse];
-                case CBORAdditionalTypeHalf:
-                    return [[CBORNumber alloc] initWithMajor:major
-                                                       minor:minorType
-                                               unsignedValue:[self longLongValue]];
-                case CBORAdditionalTypeFloat:
-                    return [[CBORNumber alloc] initWithMajor:major
-                                                       minor:minorType
-                                                  floatValue:[self floatValue]];
-                case CBORAdditionalTypeDouble:
-                    return [[CBORNumber alloc] initWithMajor:major
-                                                       minor:minorType
-                                                  floatValue:[self doubleValue]];
-                default: {
-                    UInt64 value = [self unsignedLongLongValue];
-                    if (!CBORIsSimpleValue(value)) { return nil; }
-                    // 简单值
-                    return [[CBORNumber alloc] initWithMajor:major
-                                               unsignedValue:value];
-                }
-            }
-        }
-        case CBORMajorTypeTag: {
-            switch (minor) {
-                case CBORTagTypeEpochBasedDateTime: {
-                    // 时间戳
-                    return [[CBORTag alloc] initWithMajor:major
-                                                      tag:minor
-                                                    value:[self cborObject]];
-                }
-            }
-        }
-        default:
-            return nil;
-        }
-            
-    }
-}
 
 @end

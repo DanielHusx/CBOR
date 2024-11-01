@@ -27,34 +27,48 @@
 #import "CBORArray.h"
 #import "CBORTag.h"
 
-extern CBORObject * CBOREncodeObject(NSObject *model, CBORMajorType major, CBORUInt64 minor);
 @implementation NSArray (CBOR)
 
 - (nullable CBORObject *)cborObject {
-    return [self cborObjectWithMajor:CBORUnknownMajorType minor:CBORUnknownMajorType context:NULL];
+    return [self cborObjectWithMajor:CBORUnknownMajorType
+                               minor:CBORUnknownMinorType
+                             context:NULL];
 }
 
-- (nullable CBORObject *)cborObjectWithMajor:(CBORMajorType)major minor:(CBORUInt64)minor {
-    return [self cborObjectWithMajor:major minor:minor context:NULL];
+- (nullable CBORObject *)cborObjectWithMajor:(CBORMajorType)major
+                                       minor:(CBORMinorType)minor {
+    return [self cborObjectWithMajor:major
+                               minor:minor
+                             context:NULL];
 }
 
 - (nullable CBORObject *)cborObjectWithMajor:(CBORMajorType)major
                                        minor:(CBORUInt64)minor
                                      context:(CBORObject *(*)(NSObject *, CBORMajorType, CBORUInt64))context {
     if (CBORMajorTypeIsUnknown(major)) {
-        return [self cborArrayWithContext:context];
+        return [self cborArrayWithMinor:CBORUnknownMinorType
+                                context:context];
     }
     
-    switch (major) {
+    CBORMajorType majorType = CBORTypeMajor(major);
+    
+    switch (majorType) {
         case CBORMajorTypeArray:
-            return [self cborArrayWithContext:context];
+            return [self cborArrayWithMinor:minor
+                                    context:context];
         case CBORMajorTypeTag: {
-            switch (minor) {
-                    // TODO: 枚举可能类型为数组的Tag
+            CBORTagType tag = minor;
+            CBORMinorType minorType = CBORTypeMinor(major);
+            
+            switch (tag) {
+                    // 枚举可能类型为数组的Tag
                 case CBORTagTypePositiveBignum:
                 case CBORTagTypeNegativeBignum: {
-                    CBORObject *value = [self cborArrayWithContext:context];
-                    return [[CBORTag alloc] initWithMajor:major tag:minor value:value];
+                    CBORObject *value = [self cborArrayWithMinor:minorType
+                                                         context:context];
+                    return [[CBORTag alloc] initWithMajor:majorType
+                                                      tag:tag
+                                                    value:value];
                 }
                 default: break;
             }
@@ -66,9 +80,10 @@ extern CBORObject * CBOREncodeObject(NSObject *model, CBORMajorType major, CBORU
     return nil;
 }
 
-- (CBORObject *)cborArrayWithContext:(CBORObject *(*)(NSObject *, CBORMajorType, CBORUInt64))context {
+- (CBORObject *)cborArrayWithMinor:(CBORMinorType)minor
+                           context:(CBORObject *(*)(NSObject *, CBORMajorType, CBORUInt64))context {
     CBORArray *ret = [[CBORArray alloc] initWithMajor:CBORMajorTypeArray
-                                                minor:[self count]];
+                                                minor:minor];
     for (NSObject *item in self) {
         CBORObject *cbor = context(item, CBORUnknownMajorType, CBORUnknownMinorType);
         if (!cbor) { return nil; }
@@ -88,12 +103,18 @@ extern CBORObject * CBOREncodeObject(NSObject *model, CBORMajorType major, CBORU
     return [[self allObjects] cborObject];
 }
 
-- (nullable CBORObject *)cborObjectWithMajor:(CBORMajorType)major minor:(CBORUInt64)minor {
-    return [[self allObjects] cborObjectWithMajor:major minor:minor];
+- (nullable CBORObject *)cborObjectWithMajor:(CBORMajorType)major
+                                       minor:(CBORMinorType)minor {
+    return [[self allObjects] cborObjectWithMajor:major
+                                            minor:minor];
 }
 
-- (CBORObject *)cborObjectWithMajor:(CBORMajorType)major minor:(CBORUInt64)minor context:(CBORObject * _Nullable (*)(NSObject * _Nonnull __strong, CBORMajorType, CBORUInt64))context {
-    return [[self allObjects] cborObjectWithMajor:major minor:minor context:context];
+- (CBORObject *)cborObjectWithMajor:(CBORMajorType)major
+                              minor:(CBORMinorType)minor
+                            context:(CBORObject * _Nullable (*)(NSObject * _Nonnull __strong, CBORMajorType, CBORUInt64))context {
+    return [[self allObjects] cborObjectWithMajor:major
+                                            minor:minor
+                                          context:context];
 }
 
 @end

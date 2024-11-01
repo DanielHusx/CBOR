@@ -27,6 +27,8 @@
 
 @interface CBORTag ()
 
+/// 扩展标记
+@property (nonatomic, assign) CBORTagType tag;
 /// 扩展数据
 @property (nonatomic, strong) CBORObject *value;
 
@@ -37,8 +39,9 @@
 - (instancetype)initWithMajor:(CBORMajorType)major
                           tag:(CBORTagType)tag
                         value:(CBORObject *)value {
-    self = [super initWithMajor:major minor:tag];
+    self = [super initWithMajor:major minor:0];
     if (self) {
+        _tag = tag;
         _value = value;
     }
     return self;
@@ -56,7 +59,7 @@
     if (self.majorType != CBORMajorTypeTag) { return nil; }
     
     NSMutableData *ret = [NSMutableData data];
-    [ret appendData:[self dataWithLengthOrValue:self.minorType]];
+    [ret appendData:[self dataWithLengthOrValue:self.tag]];
     
     NSData *value = [_value cborData];
     if (!value) { return nil; }

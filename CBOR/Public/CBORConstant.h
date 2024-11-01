@@ -168,11 +168,11 @@ typedef NS_ENUM(CBORUInt64, CBORTagType) {
 
     // 6...20 unassigned
 
-    /// 预期后续编码方式为Base64地址编码
+    /// 预期后续编码方式为Base64地址编码 —— 暂时未能编码
     CBORTagTypeExpectedConversionToBase64URLEncoding    = 21,
-    /// 预期后续编码方式为Base64编码
+    /// 预期后续编码方式为Base64编码 —— 暂时未能编码
     CBORTagTypeExpectedConversionToBase64Encoding       = 22,
-    /// 预期后续编码方式为Base16编码
+    /// 预期后续编码方式为Base16编码 —— 暂时未能编码
     CBORTagTypeExpectedConversionToBase16Encoding       = 23,
     /// 编码数据格式
     CBORTagTypeEncodedCBORDataItem                      = 24,
@@ -192,7 +192,7 @@ typedef NS_ENUM(CBORUInt64, CBORTagType) {
     CBORTagTypeUUID                 = 37,
 
     // 38...55798 unassigned
-    /// 自1970-01-01开始计算天数差（整数）
+    /// 自1970-01-01开始计算天数差（整数）—— 暂时未能编码
     CBORTagTypeDaysSinceEpochDate   = 100,
     
     /// 自我描述

@@ -34,21 +34,33 @@
                                       value:self];
 }
 
-- (nullable CBORObject *)cborObjectWithMajor:(CBORMajorType)major minor:(CBORUInt64)minor {
+- (nullable CBORObject *)cborObjectWithMajor:(CBORMajorType)major
+                                       minor:(CBORMinorType)minor {
     if (CBORMajorTypeIsUnknown(major)) { return [self cborObject]; }
-    CBORObject *value = [[CBORArray alloc] initWithMajor:CBORMajorTypeBytes
-                                                   value:self];
-    switch (major) {
+    
+    CBORMajorType majorType = CBORTypeMajor(major);
+    
+    switch (majorType) {
         case CBORMajorTypeBytes:
-            return value;
+            return [[CBORArray alloc] initWithMajor:majorType
+                                              minor:minor
+                                              value:self];
         case CBORMajorTypeTag: {
-            switch (minor) {
+            CBORTagType tag = minor;
+            CBORMinorType minorType = CBORTypeMinor(major);
+            
+            switch (tag) {
                 case CBORTagTypePositiveBignum:
                 case CBORTagTypeNegativeBignum:
                 case CBORTagTypeEncodedCBORDataItem:
-                case CBORTagTypeUUID:
-                    return [[CBORTag alloc] initWithMajor:major tag:minor value:value];
-                    
+                case CBORTagTypeUUID: {
+                    CBORObject *value = [[CBORArray alloc] initWithMajor:CBORMajorTypeBytes
+                                                                   minor:minorType
+                                                                   value:self];
+                    return [[CBORTag alloc] initWithMajor:majorType
+                                                      tag:tag
+                                                    value:value];
+                }
                 default:
                     return nil;
             }

@@ -168,8 +168,8 @@ XCTAssertTrue([data isEqualToData:dataRet]); \
 }
 
 /// 测试字符串
-- (void)te1stDecodeStrings {
-    CBORDecodeArray(@"stringValue", 0x6b, 0x73, 0x74, 0x72, 0x69, 0x6E, 0x67, 0x56, 0x61, 0x6C, 0x75, 0x65)
+- (void)testDecodeStrings {
+//    CBORDecodeArray(@"stringValue", 0x6b, 0x73, 0x74, 0x72, 0x69, 0x6E, 0x67, 0x56, 0x61, 0x6C, 0x75, 0x65)
 //    CBORDecodeArray(@"", 0x60)
 //    CBORDecodeArray(@"B", 0x61, 0x42)
 //    CBORDecodeArray(@"ABC", 0x63, 0x41, 0x42, 0x43)
@@ -179,6 +179,18 @@ XCTAssertTrue([data isEqualToData:dataRet]); \
 //    CBORDecodeArray(@"B", 0x78, 0x01, 0x42)
 //    CBORDecodeArray(@"ABC", 0x79, 0x00, 3, 0x41, 0x42, 0x43)
 //    CBORDecodeArray(@"ABCABC", 0x7f, 0x78, 3, 0x41, 0x42, 0x43, 0x63, 0x41, 0x42, 0x43, 0xff)
+    
+    {
+        NSString *value = @"B";
+    Byte byte[] = {0x78, 0x01, 0x42}; \
+    NSData *data = [NSData dataWithBytes:&byte length:sizeof(byte)]; \
+    NSObject *ret = [CBORParser decodeData:data]; \
+    NSLog(@"比对: %@ => %@ => %@", data, ret, value); \
+    XCTAssertTrue([ret isEqual:value]); \
+        NSData *dataRet = [CBORParser encodeObject:value major:CBORMajorTypeString]; \
+    NSLog(@"数据: %@ => %@", data, dataRet); \
+    XCTAssertTrue([data isEqualToData:dataRet]); \
+    }
 }
 
 /// 测试数组

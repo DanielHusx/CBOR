@@ -30,7 +30,7 @@
 
 - (CBORObject *)cborObject { return [CBORSimple cborNull]; }
 
-- (CBORObject *)cborObjectWithMajor:(CBORMajorType)major minor:(CBORUInt64)minor {
+- (CBORObject *)cborObjectWithMajor:(CBORMajorType)major minor:(CBORMinorType)minor {
     return [self cborObject];
 }
 

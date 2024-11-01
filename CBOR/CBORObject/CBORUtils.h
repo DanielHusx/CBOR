@@ -89,20 +89,30 @@ static inline CBORMinorType CBORMinorWithValue(CBORUInt64 value) {
 /// 长度类型是否有效
 static inline bool CBORIsLengthTypeValid(CBORLengthType type) {
     return type != CBORLengthTypeUndefined;
-    switch (type) {
-        case CBORLengthTypeUInt8:
-        case CBORLengthTypeUInt16:
-        case CBORLengthTypeUInt32:
-        case CBORLengthTypeUInt64:
-            return true;
-        default:
-            return false;
-    }
 }
 
 /// 字节长度是否有效
 static inline bool CBORIsByteLengthValid(CBORUInt64 length) {
     return length != CBORLengthTypeUndefined;
+}
+
+/// 根据具体值获取长度类型
+static inline CBORLengthType CBORLengthTypeWithLengthOrMinor(CBORUInt64 length, CBORByte max, CBORMinorType minor) {
+    switch (minor) {
+        case CBORLengthTypeUInt8:
+        case CBORLengthTypeUInt16:
+        case CBORLengthTypeUInt32:
+        case CBORLengthTypeUInt64: {
+            // 得到最适合的长度
+            CBORLengthType ret = CBORLengthTypeWithLength(length, max);
+            // 当得到的最适合的长度不非法时，取用最大值
+            // 例如：长度为3，但要求1字节存储，则返回`CBORLengthTypeUInt8`
+            if (!CBORIsLengthTypeValid(ret)) { return minor; }
+            return MAX(minor, ret);
+        }
+        default:
+            return CBORLengthTypeWithLength(length, max);
+    }
 }
 
 /// 时间格式化方法

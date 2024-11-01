@@ -61,10 +61,6 @@ NS_ASSUME_NONNULL_BEGIN
 /// JSON字典转模型时，自定义设置属性值
 - (BOOL)modelCustomTransformToDictionary:(NSMutableDictionary *)dic;
 
-
-/// 自定义转化
-- (nullable NSData *)modelCustomPropertyCBORDataForKey:(NSString *)key;
-
 @end
 
 NS_ASSUME_NONNULL_END

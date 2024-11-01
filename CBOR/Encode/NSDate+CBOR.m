@@ -27,31 +27,35 @@
 #import "NSString+CBOR.h"
 #import "CBORNumber.h"
 #import "CBORTag.h"
+#import "CBORArray.h"
 
 @implementation NSDate (CBOR)
 
 - (nullable CBORObject *)cborObject {
-//    return [[CBORNumber alloc] initWithMajor:CBORMajorTypeAdditional
-//                                       minor:CBORAdditionalTypeDouble
-//                                  floatValue:[self timeIntervalSince1970]];
-    CBORObject *value = [[CBORNumber alloc] initWithMajor:CBORMajorTypeUnsigned
-                                            unsignedValue:[self timeIntervalSince1970]];
+    CBORObject *value = [[CBORNumber alloc] initWithMajor:CBORMajorTypeAdditional
+                                                    minor:CBORAdditionalTypeDouble
+                                               floatValue:[self timeIntervalSince1970]];
     return [[CBORTag alloc] initWithMajor:CBORMajorTypeTag
                                       tag:CBORTagTypeEpochBasedDateTime
                                     value:value];
 }
 
-- (nullable CBORObject *)cborObjectWithMajor:(CBORMajorType)major minor:(CBORUInt64)minor {
+- (nullable CBORObject *)cborObjectWithMajor:(CBORMajorType)major
+                                       minor:(CBORMinorType)minor {
     if (CBORMajorTypeIsUnknown(major)) { return [self cborObject]; }
     
-    switch (major) {
+    CBORMajorType majorType = CBORTypeMajor(major);
+    
+    switch (majorType) {
         case CBORMajorTypeUnsigned: {
-            // 特殊类型只为了让NSDate作为Epoch时间可以为整数类型
-            CBORObject *value = [[CBORNumber alloc] initWithMajor:major
-                                                    unsignedValue:[self timeIntervalSince1970]];
-            return [[CBORTag alloc] initWithMajor:CBORMajorTypeTag
-                                              tag:CBORTagTypeEpochBasedDateTime
-                                            value:value];
+            return [[CBORNumber alloc] initWithMajor:majorType
+                                               minor:minor
+                                       unsignedValue:[self timeIntervalSince1970]];
+        }
+        case CBORMajorTypeString: {
+            return [[CBORArray alloc] initWithMajor:majorType
+                                              minor:minor
+                                              value:[[CBORISODateFormatter() stringFromDate:self] dataUsingEncoding:NSUTF8StringEncoding]];
         }
         case CBORMajorTypeAdditional: {
             CBORMinorType minorType = CBORTypeMinor(minor);
@@ -59,7 +63,7 @@
             switch (minorType) {
                 case CBORAdditionalTypeFloat:
                 case CBORAdditionalTypeDouble:
-                    return [[CBORNumber alloc] initWithMajor:major
+                    return [[CBORNumber alloc] initWithMajor:majorType
                                                        minor:minorType
                                                   floatValue:[self timeIntervalSince1970]];
                 default:
@@ -67,20 +71,23 @@
             }
         }
         case CBORMajorTypeTag: {
-            switch (minor) {
+            CBORTagType tag = minor;
+            CBORMinorType minorType = CBORTypeMinor(major);
+            
+            switch (tag) {
                 case CBORTagTypeStandardDateTimeString: {
-                    CBORObject *value = [[CBORISODateFormatter() stringFromDate:self] cborObjectWithMajor:major
-                                                                                                    minor:minor];
-                    return [[CBORTag alloc] initWithMajor:major
-                                                      tag:minor
+                    CBORObject *value = [[CBORISODateFormatter() stringFromDate:self] cborObjectWithMajor:CBORMajorTypeString
+                                                                                                    minor:minorType];
+                    return [[CBORTag alloc] initWithMajor:majorType
+                                                      tag:tag
                                                     value:value];
                 }
                 case CBORTagTypeEpochBasedDateTime: {
                     CBORObject *value = [[CBORNumber alloc] initWithMajor:CBORMajorTypeAdditional
                                                                     minor:CBORAdditionalTypeDouble
                                                                floatValue:[self timeIntervalSince1970]];
-                    return [[CBORTag alloc] initWithMajor:major
-                                                      tag:minor
+                    return [[CBORTag alloc] initWithMajor:majorType
+                                                      tag:tag
                                                     value:value];
                 }
                 default:

@@ -34,15 +34,22 @@
                                       value:[self dataUsingEncoding:NSUTF8StringEncoding]];
 }
 
-- (nullable CBORObject *)cborObjectWithMajor:(CBORMajorType)major minor:(CBORUInt64)minor {
+- (nullable CBORObject *)cborObjectWithMajor:(CBORMajorType)major minor:(CBORMinorType)minor {
     if (CBORMajorTypeIsUnknown(major)) { return [self cborObject]; }
+    
+    CBORMajorType majorType = CBORTypeMajor(major);
     
     CBORObject *value = [[CBORArray alloc] initWithMajor:CBORMajorTypeString
                                                    value:[self dataUsingEncoding:NSUTF8StringEncoding]];
-    switch (major) {
+    switch (majorType) {
         case CBORMajorTypeString:
-            return value;
+            return [[CBORArray alloc] initWithMajor:majorType
+                                              minor:minor
+                                              value:[self dataUsingEncoding:NSUTF8StringEncoding]];;
         case CBORMajorTypeTag: {
+            CBORTagType tag = minor;
+            CBORMinorType minorType = CBORTypeMinor(major);
+            
             switch (minor) {
                 case CBORTagTypeStandardDateTimeString:
                 case CBORTagTypeURI:
@@ -50,10 +57,14 @@
                 case CBORTagTypeBase64:
                 case CBORTagTypeRegularExpression:
                 case CBORTagTypeMIMEMessage:
-                case CBORTagTypeSelfDescribeCBOR:
-                    return [[CBORTag alloc] initWithMajor:CBORMajorTypeTag
-                                                      tag:minor
+                case CBORTagTypeSelfDescribeCBOR: {
+                    CBORObject *value = [[CBORArray alloc] initWithMajor:CBORMajorTypeString
+                                                                   minor:minorType
+                                                                   value:[self dataUsingEncoding:NSUTF8StringEncoding]];
+                    return [[CBORTag alloc] initWithMajor:majorType
+                                                      tag:tag
                                                     value:value];
+                }
                 default:
                     return nil;
             }
@@ -72,7 +83,7 @@
     return [[self string] cborObject];
 }
 
-- (nullable CBORObject *)cborObjectWithMajor:(CBORMajorType)major minor:(CBORUInt64)minor {
+- (nullable CBORObject *)cborObjectWithMajor:(CBORMajorType)major minor:(CBORMinorType)minor {
     return [[self string] cborObjectWithMajor:major minor:minor];
 }
 
@@ -86,7 +97,7 @@
                                                 minor:CBORTagTypeURI];
 }
 
-- (nullable CBORObject *)cborObjectWithMajor:(CBORMajorType)major minor:(CBORUInt64)minor {
+- (nullable CBORObject *)cborObjectWithMajor:(CBORMajorType)major minor:(CBORMinorType)minor {
     if (CBORMajorTypeIsUnknown(major)) { return [self cborObject]; }
     
     switch (major) {
