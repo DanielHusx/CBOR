@@ -31,6 +31,7 @@ typedef UInt8 CBORByte;
 typedef UInt64 CBORMinorType;
 
 typedef UInt64 CBORUInt64;
+typedef Float64 CBORFloat64;
 
 /// 未知CBOR类型
 static const CBORByte CBORUnknownMajorType = UINT8_MAX;

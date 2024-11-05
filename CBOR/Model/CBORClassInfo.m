@@ -618,7 +618,7 @@ static inline BOOL CBOREncodingTypeIsCNumber(CBOREncodingType type) {
             
             CBORByte type = [major unsignedCharValue];
             propertyMeta->_isCustomCBORType = true;
-            propertyMeta->_major = type & CBORMaskMajor;
+            propertyMeta->_major = type;
         }];
     }
     

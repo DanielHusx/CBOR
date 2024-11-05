@@ -32,14 +32,14 @@ NS_ASSUME_NONNULL_BEGIN
 /// 构建浮点数
 - (instancetype)initWithMajor:(CBORMajorType)major
                         minor:(CBORMinorType)minor
-                   floatValue:(Float64)value;
+                   floatValue:(CBORFloat64)value;
 
-/// 构建整数
+/// 构建整数 或 半精度浮点数
 - (instancetype)initWithMajor:(CBORMajorType)major
                         minor:(CBORMinorType)minor
-                unsignedValue:(UInt64)value;
+                unsignedValue:(CBORUInt64)value;
 - (instancetype)initWithMajor:(CBORMajorType)major
-                unsignedValue:(UInt64)value;
+                unsignedValue:(CBORUInt64)value;
 
 @end
 

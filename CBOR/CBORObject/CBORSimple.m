@@ -24,6 +24,8 @@
 //
 
 #import "CBORSimple.h"
+#import "CBORUndefined.h"
+#import "CBORBreak.h"
 
 @implementation CBORSimple
 
@@ -69,8 +71,9 @@
         case CBORAdditionalTypeTrue: return @(YES);
         case CBORAdditionalTypeFalse: return @(NO);
         case CBORAdditionalTypeNull: return [NSNull null];
+        case CBORAdditionalTypeUndefined: return [CBORUndefined new];
+        case CBORAdditionalTypeBreak: return [CBORBreak new];
         default:
-            NSLog(@"daniel: [Simple] 不支持原生对象: minor: %llu", self.minorType);
             return nil;
     }
 }
@@ -91,7 +94,6 @@
         }
             // 浮点数/简单值的类型在CBORNumber中处理
         default:
-            NSLog(@"daniel: [Simple] 不支持转化数据: minor: %llu", self.minorType);
             return nil;
     }
 }

@@ -46,7 +46,7 @@
                         minor:CBORUnknownMinorType];
 }
 
-+ (NSData *)encodeObject:(id)obj major:(CBORMajorType)major minor:(CBORUInt64)minor {
++ (NSData *)encodeObject:(id)obj major:(CBORMajorType)major minor:(CBORMinorType)minor {
     CBORObject *cbor = [CBOREncoder encodeObject:obj
                                            major:major
                                            minor:minor];

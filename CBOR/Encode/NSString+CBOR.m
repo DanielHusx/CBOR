@@ -39,8 +39,6 @@
     
     CBORMajorType majorType = CBORTypeMajor(major);
     
-    CBORObject *value = [[CBORArray alloc] initWithMajor:CBORMajorTypeString
-                                                   value:[self dataUsingEncoding:NSUTF8StringEncoding]];
     switch (majorType) {
         case CBORMajorTypeString:
             return [[CBORArray alloc] initWithMajor:majorType

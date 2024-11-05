@@ -29,12 +29,25 @@
 #import "CBORTag.h"
 #import "CBORArray.h"
 
+/// 判断浮点数是否是整数
+static inline bool CBORIsInteger(float value) {
+    int intValue = (int)floorf(value);
+    // 确定没有小数点
+    return intValue == value;
+}
+
 @implementation NSDate (CBOR)
 
 - (nullable CBORObject *)cborObject {
-    CBORObject *value = [[CBORNumber alloc] initWithMajor:CBORMajorTypeAdditional
-                                                    minor:CBORAdditionalTypeDouble
-                                               floatValue:[self timeIntervalSince1970]];
+    CBORObject *value;
+    if (CBORIsInteger([self timeIntervalSince1970])) {
+        value = [[CBORNumber alloc] initWithMajor:CBORMajorTypeUnsigned
+                                    unsignedValue:[self timeIntervalSince1970]];
+    } else {
+        value = [[CBORNumber alloc] initWithMajor:CBORMajorTypeAdditional
+                                            minor:CBORAdditionalTypeDouble
+                                       floatValue:[self timeIntervalSince1970]];
+    }
     return [[CBORTag alloc] initWithMajor:CBORMajorTypeTag
                                       tag:CBORTagTypeEpochBasedDateTime
                                     value:value];

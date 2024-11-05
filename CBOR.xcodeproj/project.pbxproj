@@ -8,9 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		5A7883F32CD0AF1700E32ED7 /* CBOR.h in Headers */ = {isa = PBXBuildFile; fileRef = 5A7883F22CD0AF1700E32ED7 /* CBOR.h */; };
+		5A7E34F62CD856DC0048B60B /* CBORModelTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 5A7E34F52CD856DC0048B60B /* CBORModelTests.m */; };
 		5A8CB5E12CB9347A003C55CA /* CBOR.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5A8CB5D82CB9347A003C55CA /* CBOR.framework */; };
 		5A8CB5E62CB9347A003C55CA /* CBORTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 5A8CB5E52CB9347A003C55CA /* CBORTests.m */; };
-		5A8CB60B2CBA074D003C55CA /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 5A8CB60A2CBA074D003C55CA /* main.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -23,25 +23,12 @@
 		};
 /* End PBXContainerItemProxy section */
 
-/* Begin PBXCopyFilesBuildPhase section */
-		5A8CB6062CBA074D003C55CA /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 1;
-		};
-/* End PBXCopyFilesBuildPhase section */
-
 /* Begin PBXFileReference section */
 		5A7883F22CD0AF1700E32ED7 /* CBOR.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBOR.h; sourceTree = "<group>"; };
+		5A7E34F52CD856DC0048B60B /* CBORModelTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBORModelTests.m; sourceTree = "<group>"; };
 		5A8CB5D82CB9347A003C55CA /* CBOR.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CBOR.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		5A8CB5E02CB9347A003C55CA /* CBORTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CBORTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5A8CB5E52CB9347A003C55CA /* CBORTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBORTests.m; sourceTree = "<group>"; };
-		5A8CB6082CBA074D003C55CA /* CBOR_MacConsole */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = CBOR_MacConsole; sourceTree = BUILT_PRODUCTS_DIR; };
-		5A8CB60A2CBA074D003C55CA /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -68,13 +55,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		5A8CB6052CBA074D003C55CA /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -83,7 +63,6 @@
 			children = (
 				5A8CB5DA2CB9347A003C55CA /* CBOR */,
 				5A8CB5E42CB9347A003C55CA /* CBORTests */,
-				5A8CB6092CBA074D003C55CA /* CBOR_MacConsole */,
 				5A8CB5D92CB9347A003C55CA /* Products */,
 			);
 			sourceTree = "<group>";
@@ -93,7 +72,6 @@
 			children = (
 				5A8CB5D82CB9347A003C55CA /* CBOR.framework */,
 				5A8CB5E02CB9347A003C55CA /* CBORTests.xctest */,
-				5A8CB6082CBA074D003C55CA /* CBOR_MacConsole */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -115,16 +93,9 @@
 			isa = PBXGroup;
 			children = (
 				5A8CB5E52CB9347A003C55CA /* CBORTests.m */,
+				5A7E34F52CD856DC0048B60B /* CBORModelTests.m */,
 			);
 			path = CBORTests;
-			sourceTree = "<group>";
-		};
-		5A8CB6092CBA074D003C55CA /* CBOR_MacConsole */ = {
-			isa = PBXGroup;
-			children = (
-				5A8CB60A2CBA074D003C55CA /* main.m */,
-			);
-			path = CBOR_MacConsole;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -184,23 +155,6 @@
 			productReference = 5A8CB5E02CB9347A003C55CA /* CBORTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		5A8CB6072CBA074D003C55CA /* CBOR_MacConsole */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 5A8CB60C2CBA074D003C55CA /* Build configuration list for PBXNativeTarget "CBOR_MacConsole" */;
-			buildPhases = (
-				5A8CB6042CBA074D003C55CA /* Sources */,
-				5A8CB6052CBA074D003C55CA /* Frameworks */,
-				5A8CB6062CBA074D003C55CA /* CopyFiles */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = CBOR_MacConsole;
-			productName = CBOR_MacConsole;
-			productReference = 5A8CB6082CBA074D003C55CA /* CBOR_MacConsole */;
-			productType = "com.apple.product-type.tool";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -214,9 +168,6 @@
 						CreatedOnToolsVersion = 15.2;
 					};
 					5A8CB5DF2CB9347A003C55CA = {
-						CreatedOnToolsVersion = 15.2;
-					};
-					5A8CB6072CBA074D003C55CA = {
 						CreatedOnToolsVersion = 15.2;
 					};
 				};
@@ -236,7 +187,6 @@
 			targets = (
 				5A8CB5D72CB9347A003C55CA /* CBOR */,
 				5A8CB5DF2CB9347A003C55CA /* CBORTests */,
-				5A8CB6072CBA074D003C55CA /* CBOR_MacConsole */,
 			);
 		};
 /* End PBXProject section */
@@ -271,14 +221,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				5A8CB5E62CB9347A003C55CA /* CBORTests.m in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		5A8CB6042CBA074D003C55CA /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				5A8CB60B2CBA074D003C55CA /* main.m in Sources */,
+				5A7E34F62CD856DC0048B60B /* CBORModelTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -503,26 +446,6 @@
 			};
 			name = Release;
 		};
-		5A8CB60D2CBA074D003C55CA /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				MACOSX_DEPLOYMENT_TARGET = 14.2;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
-			};
-			name = Debug;
-		};
-		5A8CB60E2CBA074D003C55CA /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				MACOSX_DEPLOYMENT_TARGET = 14.2;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -549,15 +472,6 @@
 			buildConfigurations = (
 				5A8CB5EE2CB9347A003C55CA /* Debug */,
 				5A8CB5EF2CB9347A003C55CA /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		5A8CB60C2CBA074D003C55CA /* Build configuration list for PBXNativeTarget "CBOR_MacConsole" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				5A8CB60D2CBA074D003C55CA /* Debug */,
-				5A8CB60E2CBA074D003C55CA /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

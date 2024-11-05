@@ -28,39 +28,35 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/// CBOR解析器
 @interface CBORParser : NSObject
 
 // MARK: - Encode
 /// 编码对象
-/// - Parameter obj: 模型对象
-/// - Returns: CBOR数据（大端）
 + (nullable NSData *)encodeObject:(id)obj;
 /// 编码对象
-/// - Parameters:
-///   - obj: 对象
-///   - major: 主要类型
 + (nullable NSData *)encodeObject:(id)obj
                             major:(CBORMajorType)major;
 /// 编码对象
 /// - Parameters:
-///   - obj: 对象
-///   - major: 主要类型
-///   - minor: 次要类型
+///   - obj: 模型对象 `NSObject, NSData, NSDate, NSNumber, NSString, NSArray, NSDictionary, NSNull...`
+///   - major: 主要类型；当为`CBORMajorTag`时，可或`CBORLengthType`设定子元素的长度
+///   - minor: 次要类型；参考`CBORLengthType, CBORAdditionalType, CBORTagType, etc...`
 + (nullable NSData *)encodeObject:(id)obj
                             major:(CBORMajorType)major
-                            minor:(CBORUInt64)minor;
+                            minor:(CBORMinorType)minor;
 
 
 // MARK: - Decode
 /// 解码数据
 /// - Parameter data: CBOR数据（大端）
-/// - Returns: 解析后的原生对象
+/// - Returns: 解析后的原生对象`NSData, NSDate, NSNumber, NSString, NSArray, NSDictionary, NSNull...`
 + (nullable id)decodeData:(NSData *)data;
-/// 解码数据
+/// 解码字典数据
 /// - Parameters:
 ///   - aClass: 解析成指定类实例对象
-///   - data: CBOR数据（大端）
-/// - Returns: 
+///   - data: CBOR数据（大端），必须是字典类型数据，否则结果将返回nil
+/// - Returns: aClass对象
 + (nullable id)decodeClass:(Class)aClass fromData:(NSData *)data;
 
 @end

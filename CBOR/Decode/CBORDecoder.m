@@ -55,7 +55,6 @@ static CBORUInt64 CBORReadValueOrLength(CBORStream *stream, CBORMinorType value)
         case CBORLengthTypeUInt32: return [stream popUInt32];
         case CBORLengthTypeUInt64: return [stream popUInt64];
         default:
-            NSLog(@"daniel: [Decode] 长度类型不支持: %llu", value);
             return 0;
     }
 }
@@ -161,6 +160,7 @@ static CBORObject * CBORDecodeData(CBORStream *stream) {
         case CBORMajorTypeAdditional: {
             switch (minorType) {
                 case CBORAdditionalTypeHalf:
+                    // 解码时的值需要转化，所以传无符号整数进一步内部转化为半精度
                     return [[CBORNumber alloc] initWithMajor:majorType
                                                        minor:minorType
                                                unsignedValue:[stream popFloat16]];
@@ -172,19 +172,23 @@ static CBORObject * CBORDecodeData(CBORStream *stream) {
                     return [[CBORNumber alloc] initWithMajor:majorType
                                                        minor:minorType
                                                   floatValue:[stream popFloat64]];
+                case CBORAdditionalTypeBreak:
+                case CBORAdditionalTypeNull:
+                case CBORAdditionalTypeFalse:
+                case CBORAdditionalTypeTrue:
+                case CBORAdditionalTypeUndefined:
+                    return  [[CBORSimple alloc] initWithMajor:majorType
+                                                        minor:minorType];
                 default: {
                     // 简单值
                     CBORUInt64 value = CBORReadValueOrLength(stream, minorType);
                     // 是否处于简单值区间
-                    if (CBORIsSimpleValue(value)) {
-                        return [[CBORNumber alloc] initWithMajor:majorType
-                                                           minor:minorType
-                                                   unsignedValue:value];
-                    }
+                    if (!CBORIsSimpleValue(value)) { return nil; }
                     
-                    // 其他已定义也好未定义也好都可以构建成简单类型
-                    return [[CBORSimple alloc] initWithMajor:majorType
-                                                       minor:minorType];
+                    return [[CBORNumber alloc] initWithMajor:majorType
+                                                       minor:minorType
+                                               unsignedValue:value];
+                    
                 }
                     
             }

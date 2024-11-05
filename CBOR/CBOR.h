@@ -30,12 +30,16 @@
 #import <CBOR/CBORConstant.h>
 #import <CBOR/CBORParser.h>
 #import <CBOR/CBORModel.h>
+#import <CBOR/CBORUndefined.h>
+#import <CBOR/CBORBreak.h>
 
 #elif __has_include("CBORConstant.h")
 
 #import "CBORConstant.h"
 #import "CBORParser.h"
 #import "CBORModel.h"
+#import "CBORUndefined.h"
+#import "CBORBreak.h"
 
 #endif
 

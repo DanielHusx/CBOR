@@ -62,7 +62,10 @@ uint16_t float_to_uint16(float value) {
     input.u ^= sign;
     
     if (input.u >= f32infty.u) {
-        output = (input.u > f32infty.u) ? 0x7FFFU : 0x7C00U;
+        // CBOR中0x7E00U-0x7FFFU都表示NAN，为符合最小值使用0x7E00
+        // NaN : Inf
+        output = (input.u > f32infty.u) ? 0x7E00U : 0x7C00U;
+//        output = (input.u > f32infty.u) ? 0x7FFFU : 0x7C00U;
     } else {
         input.u &= round_mask;
         input.f *= magic.f;
@@ -92,7 +95,7 @@ uint16_t float_to_uint16(float value) {
 
 - (instancetype)initWithMajor:(CBORMajorType)major
                         minor:(CBORMinorType)minor
-                   floatValue:(Float64)value {
+                   floatValue:(CBORFloat64)value {
     self = [super initWithMajor:major minor:minor];
     if (self) {
         _floatValue = value;
@@ -102,16 +105,22 @@ uint16_t float_to_uint16(float value) {
 
 - (instancetype)initWithMajor:(CBORMajorType)major
                         minor:(CBORMinorType)minor
-                unsignedValue:(UInt64)value {
+                unsignedValue:(CBORUInt64)value {
     self = [super initWithMajor:major minor:minor];
     if (self) {
-        _unsignedIntegerValue = value;
+        if (major == CBORMajorTypeAdditional && minor == CBORAdditionalTypeHalf) {
+            // 半精度
+            _floatValue = uint16_to_float(value);
+        } else {
+            // 整数
+            _unsignedIntegerValue = value;
+        }
     }
     return self;
 }
 
 - (instancetype)initWithMajor:(CBORMajorType)major
-                unsignedValue:(UInt64)value {
+                unsignedValue:(CBORUInt64)value {
     return [self initWithMajor:major
                          minor:CBORMinorWithValue(value)
                  unsignedValue:value];
@@ -128,7 +137,6 @@ uint16_t float_to_uint16(float value) {
         case CBORMajorTypeAdditional: {
             switch (self.minorType) {
                 case CBORAdditionalTypeHalf:
-                    return @(uint16_to_float(_unsignedIntegerValue));
                 case CBORAdditionalTypeFloat:
                 case CBORAdditionalTypeDouble:
                     return @(_floatValue);
@@ -151,7 +159,6 @@ uint16_t float_to_uint16(float value) {
         case CBORMajorTypeAdditional: {
             switch (self.minorType) {
                 case CBORAdditionalTypeHalf:
-                    return [self dataWithFloatValue];
                 case CBORAdditionalTypeFloat:
                 case CBORAdditionalTypeDouble:
                     return [self dataWithFloatValue];;
@@ -185,7 +192,7 @@ uint16_t float_to_uint16(float value) {
     
     switch (type) {
         case CBORAdditionalTypeHalf: {
-            UInt16 ret = CFSwapInt16HostToBig(float_to_uint16((SInt16)_unsignedIntegerValue));
+            UInt16 ret = CFSwapInt16HostToBig(float_to_uint16(_floatValue));
             return [NSData dataWithBytes:&ret length:length];
         }
         case CBORAdditionalTypeFloat: {

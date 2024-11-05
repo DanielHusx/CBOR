@@ -141,9 +141,6 @@ static inline bool CBORIsHalfValue(float value) {
                     return [[CBORSimple alloc] initWithMajor:majorType
                                                        minor:[self boolValue] ? CBORAdditionalTypeTrue: CBORAdditionalTypeFalse];
                 case CBORAdditionalTypeHalf:
-                    return [[CBORNumber alloc] initWithMajor:majorType
-                                                       minor:minorType
-                                               unsignedValue:[self longLongValue]];
                 case CBORAdditionalTypeFloat:
                     return [[CBORNumber alloc] initWithMajor:majorType
                                                        minor:minorType
@@ -191,10 +188,10 @@ static inline bool CBORIsHalfValue(float value) {
     switch (type) {
         case CBORNumberEncodingTypeFloat:
             // 判断是否是半精度
-            if (CBORIsHalfValue([self floatValue])) {
+            if (CBORIsHalfValue([self floatValue]) || (isinf([self floatValue]) || isnan([self floatValue]))) {
                 return [[CBORNumber alloc] initWithMajor:CBORMajorTypeAdditional
                                                    minor:CBORAdditionalTypeHalf
-                                           unsignedValue:[self unsignedLongLongValue]];
+                                              floatValue:[self floatValue]];
             }
            
             return [[CBORNumber alloc] initWithMajor:CBORMajorTypeAdditional
@@ -204,7 +201,7 @@ static inline bool CBORIsHalfValue(float value) {
             return [[CBORNumber alloc] initWithMajor:CBORMajorTypeAdditional
                                                minor:CBORAdditionalTypeDouble
                                           floatValue:[self doubleValue]];
-        case CBORNumberEncodingTypeCharOrBool: {
+        case CBORNumberEncodingTypeCharOrBool:
             return [[CBORSimple alloc] initWithMajor:CBORMajorTypeAdditional
                                                minor:[self boolValue] ? CBORAdditionalTypeTrue: CBORAdditionalTypeFalse];
         case CBORNumberEncodingTypeUnsignedChar:
@@ -232,7 +229,7 @@ static inline bool CBORIsHalfValue(float value) {
                                            unsignedValue:value];
             }
         }
-        }
+        
     }
     return nil;
 }
