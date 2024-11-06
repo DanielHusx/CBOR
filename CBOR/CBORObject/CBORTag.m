@@ -51,6 +51,19 @@
 - (nullable NSObject *)nsObject {
     if (self.majorType != CBORMajorTypeTag) { return nil; }
     
+    switch (self.tag) {
+        case CBORTagTypeBase64:
+        case CBORTagTypeBase64URL: {
+            NSObject *value = [_value nsObject];
+            if (![value isKindOfClass:[NSString class]]) { return nil; }
+            
+            // Base64解码
+            NSData *data = [[NSData alloc] initWithBase64EncodedString:(NSString *)value options:NSDataBase64DecodingIgnoreUnknownCharacters];
+            return [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+        }
+        default: break;
+    }
+    
     return [_value nsObject];
 }
 

@@ -80,14 +80,34 @@ uint16_t float_to_uint16(float value) {
     return output;
 }
 
+/// 校验浮点数类型
+CBORMinorType check_floating_type(CBORFloat64 value) {
+    if (isnan(value) || isinf(value)) {
+        // 非法值只用半精度浮点数表示
+        return CBORAdditionalTypeHalf;
+    }
+    
+    float halfValue = uint16_to_float(float_to_uint16(value));
+    if ((double)halfValue == value) {
+        // 显然是个半精度浮点数
+        return CBORAdditionalTypeHalf;
+    }
+    
+    float floatValue = (float)value;
+    if ((double)floatValue == value) {
+        // 显然是个单精度浮点数
+        return CBORAdditionalTypeFloat;
+    }
+    
+    return CBORAdditionalTypeDouble;
+}
+
 @interface CBORNumber ()
 
 /// 无符号整数
 @property (nonatomic, assign) UInt64 unsignedIntegerValue;
 /// 浮点数
 @property (nonatomic, assign) Float64 floatValue;
-
-@property (nonatomic, nullable, copy) NSData *value;
 
 @end
 
@@ -101,6 +121,13 @@ uint16_t float_to_uint16(float value) {
         _floatValue = value;
     }
     return self;
+}
+
+- (instancetype)initWithMajor:(CBORMajorType)major
+                   floatValue:(CBORFloat64)value {
+    return [self initWithMajor:major
+                         minor:check_floating_type(value)
+                    floatValue:value];
 }
 
 - (instancetype)initWithMajor:(CBORMajorType)major

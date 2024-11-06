@@ -32,13 +32,15 @@
 + (NSDictionary<NSString *, NSNumber *> *)modelCustomPropertyMajor {
     return @{
         // 可以不加CBORLengthTypeUInt8，那么Tag的子元素将根据自身最小所需长度设置
-        @"tagValue": @(CBORMajorTypeTag | CBORLengthTypeUInt8)
+        @"tagValue": @(CBORMajorTypeTag | CBORLengthTypeUInt8),
+        @"doubleValue": @(CBORMajorTypeAdditional)
     };
 }
 
 + (NSDictionary<NSString *,NSNumber *> *)modelCustomPropertyMinor {
     return @{
-        @"tagValue": @(CBORTagTypeStandardDateTimeString)
+        @"tagValue": @(CBORTagTypeStandardDateTimeString),
+        @"doubleValue": @(CBORAdditionalTypeDouble)
     };
 }
 

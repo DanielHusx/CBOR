@@ -106,7 +106,11 @@
         NSObject *value = [model.value nsObject];
         if (!value) continue;
         
-        ret[[NSString stringWithFormat:@"%@", key]] = value;
+        if ([key conformsToProtocol:@protocol(NSCopying)]) {
+            ret[(id<NSCopying>)key] = value;
+        } else {
+            ret[[NSString stringWithFormat:@"%@", key]] = value;
+        }
     }
     
     return ret;

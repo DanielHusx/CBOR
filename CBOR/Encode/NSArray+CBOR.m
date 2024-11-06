@@ -62,8 +62,8 @@
             
             switch (tag) {
                     // 枚举可能类型为数组的Tag
-                case CBORTagTypePositiveBignum:
-                case CBORTagTypeNegativeBignum: {
+                case CBORTagTypeDecimalFraction:
+                case CBORTagTypeBigfloat: {
                     CBORObject *value = [self cborArrayWithMinor:minorType
                                                          context:context];
                     return [[CBORTag alloc] initWithMajor:majorType

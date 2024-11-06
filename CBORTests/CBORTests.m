@@ -35,14 +35,14 @@
 }
 
 - (void)testResult:(NSObject *)value data:(NSData *)data decodeConvert:(NSObject *(^)(NSObject *))decodeConvert {
-    [self testResult:value major:CBORUnknownMajorType minor:CBORUnknownMinorType data:data decodeConvert:decodeConvert];
+    [self testResult:value major:CBORUnknownMajorType minor:CBORUnknownMinorType data:data decodeConvert:decodeConvert encodeConvert:nil];
 }
 
 - (void)testResult:(NSObject *)value
              major:(CBORMajorType)major
              minor:(CBORMinorType)minor
               data:(NSData *)data {
-    [self testResult:value major:major minor:minor data:data decodeConvert:nil];
+    [self testResult:value major:major minor:minor data:data decodeConvert:nil encodeConvert:nil];
 }
 
 - (void)testResult:(NSObject *)value
@@ -50,17 +50,32 @@
              minor:(CBORMinorType)minor
               data:(NSData *)data
      decodeConvert:(NSObject *(^)(NSObject *))decodeConvert {
+    [self testResult:value major:major minor:minor data:data decodeConvert:decodeConvert encodeConvert:nil];
+
+}
+- (void)testResult:(NSObject *)value
+             major:(CBORMajorType)major
+             minor:(CBORMinorType)minor
+              data:(NSData *)data
+     decodeConvert:(NSObject *(^)(NSObject *))decodeConvert
+     encodeConvert:(NSObject *(^)(NSObject *))encodeConvert {
     // 解码后的对象
     NSObject *decodedObject = [CBORParser decodeData:data];
-    NSLog(@"数据：%@ => 解码对象： %@ => 期望对象： %@", data, decodedObject, value);
     if (decodeConvert) {
-        XCTAssertTrue([decodeConvert(decodedObject) isEqualTo:value]);
-    } else {
-        XCTAssertTrue([decodedObject isEqualTo:value]);
+        decodedObject = decodeConvert(decodedObject);
     }
+    NSLog(@"数据：%@ => 解码对象： %@ => 期望对象： %@", data, decodedObject, value);
+    
+    XCTAssertTrue([decodedObject isEqualTo:value]);
+    
     
     // 编码后的数据
-    NSData *encodedData = [CBORParser encodeObject:value major:major minor:minor];
+    NSData *encodedData;
+    if (encodeConvert) {
+        encodedData = [CBORParser encodeObject:encodeConvert(value) major:major minor:minor];
+    } else {
+        encodedData = [CBORParser encodeObject:value major:major minor:minor];
+    }
     NSLog(@"对象：%@ => 加密数据： %@ => 期望数据：%@", value, encodedData, data);
     XCTAssertTrue([data isEqualToData:encodedData]);
 }
@@ -183,6 +198,7 @@
     [self testDecodeOnlyResult:@{@"key": @{@"key": @(-24)}} data:CBORData(0xbf, 0x63, 0x6b, 0x65, 0x79, 0xa1, 0x63, 0x6b, 0x65, 0x79, 0x37, 0xff)];
     [self testDecodeOnlyResult:@{@"key": @{@"key": @(-24)}} data:CBORData(0xbf, 0x63, 0x6b, 0x65, 0x79, 0xa1, 0x63, 0x6b, 0x65, 0x79, 0x37, 0xff)];
     [self testResult:@{@"_id": @"aaa", @"category": @"cake", @"ordinal": @(12.0f)} data:CBORData(0xa3, 0x63, 0x5f, 0x69, 0x64, 0x63, 0x61, 0x61, 0x61, 0x68, 0x63, 0x61, 0x74, 0x65, 0x67, 0x6f, 0x72, 0x79, 0x64, 0x63, 0x61, 0x6b, 0x65, 0x67, 0x6f, 0x72, 0x64, 0x69, 0x6e, 0x61, 0x6c, 0xf9, 0x4A, 0x00)];
+    [self testResult:@{@(1): @(2)} data:CBORData(0xa1, 0x01, 0x02)];
 }
 
 /// 测试简单类型
@@ -203,20 +219,20 @@
 
 /// 测试浮点数
 - (void)testFloat {
-    [self testResult:@(0.0f) data:CBORData(0xf9, 0, 0)];
+    [self testResult:@(0.0) data:CBORData(0xf9, 0, 0)];
     [self testResult:@(0.0f) major:CBORMajorTypeAdditional minor:CBORAdditionalTypeFloat data:CBORData(0xfa, 0, 0, 0, 0)];
     [self testResult:@(0.0f) major:CBORMajorTypeAdditional minor:CBORAdditionalTypeDouble data:CBORData(0xfb,0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)];
    
     [self testResult:@(-0.0f) data:CBORData(0xf9, 0x80, 0)];
     [self testResult:@(1.0f) data:CBORData(0xf9, 0x3c, 0)];
-    [self testResult:@(1.5f) data:CBORData(0xfa,0x3f,0xc0, 0x00,0x00)];
-    [self testResult:@((double)1.0f) data:CBORData(0xfb, 0x3f, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)];
+    [self testResult:@(1.5f) data:CBORData(0xf9, 0x3e, 0x00)];
+    [self testResult:@(1.0f) major:CBORMajorTypeAdditional minor:CBORAdditionalTypeDouble data:CBORData(0xfb, 0x3f, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)];
     // 半精度最大值
     // 65504.0
-    [self testResult:@((float)CBORHalfValueMax) data:CBORData(0xf9, 0x7b, 0xff)];
+    [self testResult:@(CBOR_HALF_MAX) data:CBORData(0xf9, 0x7b, 0xff)];
     // 半精度最小值
     // -65504.0
-    [self testResult:@((float)CBORHalfValueMin) data:CBORData(0xf9, 0xfb, 0xff)];
+    [self testResult:@(CBOR_HALF_MIN) data:CBORData(0xf9, 0xfb, 0xff)];
     
     // 单精度最大值
     // 3.402823466385289e+38
@@ -231,6 +247,8 @@
     // 2.2250738585072014e-308
     [self testResult:@(DBL_MIN) data:CBORData(0xFB, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)];
     
+    [self testResult:@(-65505.0f) data:CBORData(0xfa, 0xc7, 0x7f, 0xe1, 0x00)];
+    [self testResult:@(65505.0f) data:CBORData(0xfa, 0x47, 0x7f, 0xe1, 0x00)];
     [self testResult:@(100000.0f) data:CBORData(0xfa, 0x47, 0xc3, 0x50, 0x00)];
     
     [self testResult:@(INFINITY) data:CBORData(0xf9, 0x7c, 0x00)];
@@ -249,10 +267,13 @@
     [self testResult:@((double)-4.1) data:CBORData(0xfb, 0xc0, 0x10, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66)];
     
     [self testResult:@(1.0e+300) data:CBORData(0xfb, 0x7e, 0x37, 0xe4, 0x3c, 0x88, 0x00, 0x75, 0x9c)];
-    [self testResult:@(5.960464477539063e-8) data:CBORData(0xfb, 0x3e, 0x70, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)];
+    [self testResult:@(5.960464477539063e-8) data:CBORData(0xf9, 0x00, 0x01)];
     
     // 3.141592653589793
     [self testResult:@(M_PI) data:CBORData(0xfb, 0x40, 0x09, 0x21, 0xfb, 0x54, 0x44, 0x2d, 0x18)];
+    
+    [self testResult:@(5.5f) data:CBORData(0xf9, 0x45, 0x80)];
+    [self testResult:@(5.6) data:CBORData(0xFB, 0x40, 0x16, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66)];
 }
 
 /// 测试日期
@@ -292,5 +313,113 @@
     [self testResult:@"1993-02-09T00:00:00Z" major:CBORMajorTypeTag minor:CBORTagTypeStandardDateTimeString data:CBORData(0xc0, 0x74, 0x31, 0x39, 0x39, 0x33, 0x2D, 0x30, 0x32, 0x2D, 0x30, 0x39, 0x54, 0x30, 0x30, 0x3A, 0x30, 0x30, 0x3A, 0x30, 0x30, 0x5A)];
 }
 
+static inline UInt64 ConvertDataToBignumN(NSData *data) {
+    const uint8_t *bytes = [data bytes];
+    NSUInteger length = [data length];
+    uint8_t byteLength = 8;
+    UInt64 ret = 0;
+    
+    for (NSUInteger index = 0; index < length; index++) {
+        uint8_t byte = bytes[index];
+        for (uint8_t offset = 0; offset < byteLength; offset++) {
+            if ((byte & (1 << offset)) == 0) { continue; }
+            // 二进制1从右到左所在序号和
+            ret += (length - 1 - index) * byteLength + offset;
+        }
+    }
+    
+    return ret;
+}
+
+- (void)testTags {
+    [self testResult:@(256)
+               major:CBORMajorTypeTag
+               minor:CBORTagTypePositiveBignum
+                data:CBORData(0xc2, 0x42, 0x01, 0x00)
+       decodeConvert:^NSObject *(NSObject *value) {
+        if (![value isKindOfClass:[NSData class]]) { return nil; }
+        
+        UInt64 ret = ConvertDataToBignumN((NSData *)value);
+        
+        return @((UInt64)exp2f(ret));
+    }
+       encodeConvert:^NSObject *(NSObject *value) {
+        // CBORTagTypePositiveBignum类型应该是Byte数组，对应原生即NSData
+        return CBORData(0x01, 0x00);
+    }];
+    
+    [self testResult:@(-257)
+               major:CBORMajorTypeTag
+               minor:CBORTagTypeNegativeBignum
+                data:CBORData(0xc3, 0x42, 0x01, 0x00)
+       decodeConvert:^NSObject *(NSObject *value) {
+        if (![value isKindOfClass:[NSData class]]) { return nil; }
+        
+        UInt64 ret = ConvertDataToBignumN((NSData *)value);
+        return @((SInt64)~((UInt64)exp2f(ret)));
+    }
+       encodeConvert:^NSObject *(NSObject *value) {
+        // CBORTagTypePositiveBignum类型应该是Byte数组，对应原生即NSData
+        return CBORData(0x01, 0x00);
+    }];
+    
+    [self testResult:@(273.15f)
+               major:CBORMajorTypeTag
+               minor:CBORTagTypeDecimalFraction
+                data:CBORData(0xc4, 0x82, 0x21, 0x19, 0x6a, 0xb3)
+       decodeConvert:^NSObject *(NSObject *value) {
+        // CBORTagTypeDecimalFraction类型应该是数组类型，且数组长度为2
+        if (![value isKindOfClass:[NSArray class]]
+            || [(NSArray *)value count] != 2) { return nil; }
+        
+        /// 指数
+        NSNumber *exponent = ((NSArray *)value)[0];
+        if (![exponent isKindOfClass:[NSNumber class]]) { return nil; }
+        /// 尾数
+        NSNumber *mantissa = ((NSArray *)value)[1];
+        if (![mantissa isKindOfClass:[NSNumber class]]) { return nil; }
+        
+        float exponentValue = [exponent floatValue];
+        SInt64 mantissaValue = [mantissa longLongValue];
+        // 尾数 * 10^指数
+        return @((float)(mantissaValue * pow(10, exponentValue)));
+    } encodeConvert:^NSObject *(NSObject *value) {
+        return @[@(-2), @(27315)];
+    }];
+    
+    [self testResult:@(1.5f)
+               major:CBORMajorTypeTag
+               minor:CBORTagTypeBigfloat
+                data:CBORData(0xc5, 0x82, 0x20, 0x03)
+       decodeConvert:^NSObject *(NSObject *value) {
+        // CBORTagTypeDecimalFraction类型应该是数组类型，且数组长度为2
+        if (![value isKindOfClass:[NSArray class]]
+            || [(NSArray *)value count] != 2) { return nil; }
+        
+        /// 指数
+        NSNumber *exponent = ((NSArray *)value)[0];
+        if (![exponent isKindOfClass:[NSNumber class]]) { return nil; }
+        /// 尾数
+        NSNumber *mantissa = ((NSArray *)value)[1];
+        if (![mantissa isKindOfClass:[NSNumber class]]) { return nil; }
+        
+        float exponentValue = [exponent floatValue];
+        SInt64 mantissaValue = [mantissa longLongValue];
+        // 尾数 * 2^指数
+        return @((float)(mantissaValue * pow(2, exponentValue)));
+    } encodeConvert:^NSObject *(NSObject *value) {
+        return @[@(-1), @(3)];
+    }];
+    
+    [self testResult:@"Hello, World!"
+               major:CBORMajorTypeTag
+               minor:CBORTagTypeBase64
+                data:CBORData(0xd8, 0x22, 0x74, 0x53, 0x47, 0x56, 0x73, 0x62, 0x47, 0x38, 0x73, 0x49, 0x46, 0x64, 0x76, 0x63, 0x6D, 0x78, 0x6B, 0x49, 0x51, 0x3D, 0x3D)];
+    
+    [self testResult:@"Hello, World!"
+               major:CBORMajorTypeTag
+               minor:CBORTagTypeBase64URL
+                data:CBORData(0xd8, 0x21, 0x74, 0x53, 0x47, 0x56, 0x73, 0x62, 0x47, 0x38, 0x73, 0x49, 0x46, 0x64, 0x76, 0x63, 0x6D, 0x78, 0x6B, 0x49, 0x51, 0x3D, 0x3D)];
+}
 
 @end

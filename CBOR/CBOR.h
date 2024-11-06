@@ -42,7 +42,3 @@
 #import "CBORBreak.h"
 
 #endif
-
-// FIXME: 尝试解决以下问题
-// 1. 自定义控制转化Data时长度所需字节
-// 2. 自定义模型某字段转化Data的方式

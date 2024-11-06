@@ -33,6 +33,9 @@ typedef UInt64 CBORMinorType;
 typedef UInt64 CBORUInt64;
 typedef Float64 CBORFloat64;
 
+#define CBOR_HALF_MAX 65504.0f
+#define CBOR_HALF_MIN -65504.0f
+
 /// 未知CBOR类型
 static const CBORByte CBORUnknownMajorType = UINT8_MAX;
 /// 未知次要类型
@@ -141,14 +144,6 @@ typedef NS_ENUM(CBORByte, CBORAdditionalType) {
     CBORAdditionalTypeSimpleMaxMaxValue    = 0xFF, // 255
 };
 
-/// 半精度值区间
-typedef NS_ENUM(SInt64, CBORHalfValue) {
-    /// 半精度最小值 -65504.0 0xF9 FFFB
-    CBORHalfValueMin = -65504,
-    /// 半精度最大值 65504.0  0xF9 FF7B
-    CBORHalfValueMax = 65504,
-};
-
 /// 扩展类型具体类型
 /// 参考：https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml
 typedef NS_ENUM(CBORUInt64, CBORTagType) {
@@ -157,23 +152,32 @@ typedef NS_ENUM(CBORUInt64, CBORTagType) {
     /// 纪元时间(Epoch/UNIX/POSIX)（整数或浮点数）；自1970-01-01T00:00:00Z UTC以秒为单位进行计数
     CBORTagTypeEpochBasedDateTime       = 1,
     
-    /// 正大数(可能大于2^64)
+    /// 正大数(2^n)
+    /// 通常是0/1的Byte数组，从右边到左计算1所在位置之和
+    /// 例如: 0xc2 42 0100 => 2^8 = 256
     CBORTagTypePositiveBignum           = 2,
-    /// 负大数
+    /// 负大数(-2^n - 1)
+    /// 通常是0/1的Byte数组，从右边到左计算1所在位置之和
+    /// 例如: 0xc3 42 0100  => -2^8 - 1 => -257
     CBORTagTypeNegativeBignum           = 3,
     
-    /// 十进制分数
+    /// 十进制分数`(尾数m*10^指数e)`
+    /// 通常是长度为2的数组，`@[指数e（主要类型必须是0或1）,尾数m（可以是Bignum）]`
+    /// 例如：0xc4 82 21 196ab3 => `27315*(10^-2)` => 273.15
     CBORTagTypeDecimalFraction          = 4,
-    /// 大浮点数
+    /// 大浮点数`(尾数m*2^指数e)`
+    /// 通常是长度为2的数组，`@[指数e（主要类型必须是0或1）,尾数m（可以是Bignum）]`
+    /// 例如：0xc5 82 20 03 => `3*(2^-1)` => 1.5
     CBORTagTypeBigfloat                 = 5,
 
     // 6...20 unassigned
 
-    /// 预期后续编码方式为Base64地址编码 —— 暂时未能编码
+    /// 预期后续编码方式为Base64地址编码
+    /// 我的理解是：告诉接收方后续的字符串需要Base64地址编码
     CBORTagTypeExpectedConversionToBase64URLEncoding    = 21,
-    /// 预期后续编码方式为Base64编码 —— 暂时未能编码
+    /// 预期后续编码方式为Base64编码
     CBORTagTypeExpectedConversionToBase64Encoding       = 22,
-    /// 预期后续编码方式为Base16编码 —— 暂时未能编码
+    /// 预期后续编码方式为Base16编码
     CBORTagTypeExpectedConversionToBase16Encoding       = 23,
     /// 编码数据格式
     CBORTagTypeEncodedCBORDataItem                      = 24,
@@ -193,7 +197,7 @@ typedef NS_ENUM(CBORUInt64, CBORTagType) {
     CBORTagTypeUUID                 = 37,
 
     // 38...55798 unassigned
-    /// 自1970-01-01开始计算天数差（整数）—— 暂时未能编码
+    /// 自1970-01-01开始计算天数差（整数）
     CBORTagTypeDaysSinceEpochDate   = 100,
     
     /// 自我描述

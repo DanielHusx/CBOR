@@ -50,15 +50,27 @@
             
             switch (minor) {
                 case CBORTagTypeStandardDateTimeString:
+                case CBORTagTypeExpectedConversionToBase64URLEncoding:
+                case CBORTagTypeExpectedConversionToBase64Encoding:
+                case CBORTagTypeExpectedConversionToBase16Encoding:
                 case CBORTagTypeURI:
-                case CBORTagTypeBase64URL:
-                case CBORTagTypeBase64:
                 case CBORTagTypeRegularExpression:
                 case CBORTagTypeMIMEMessage:
                 case CBORTagTypeSelfDescribeCBOR: {
                     CBORObject *value = [[CBORArray alloc] initWithMajor:CBORMajorTypeString
                                                                    minor:minorType
                                                                    value:[self dataUsingEncoding:NSUTF8StringEncoding]];
+                    return [[CBORTag alloc] initWithMajor:majorType
+                                                      tag:tag
+                                                    value:value];
+                }
+                    
+                case CBORTagTypeBase64URL:
+                case CBORTagTypeBase64: {
+                    // Base64编码
+                    CBORObject *value = [[CBORArray alloc] initWithMajor:CBORMajorTypeString
+                                                                   minor:minorType
+                                                                   value:[[self dataUsingEncoding:NSUTF8StringEncoding] base64EncodedDataWithOptions:0]];
                     return [[CBORTag alloc] initWithMajor:majorType
                                                       tag:tag
                                                     value:value];

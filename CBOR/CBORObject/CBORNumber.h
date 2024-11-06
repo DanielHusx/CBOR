@@ -33,6 +33,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)initWithMajor:(CBORMajorType)major
                         minor:(CBORMinorType)minor
                    floatValue:(CBORFloat64)value;
+- (instancetype)initWithMajor:(CBORMajorType)major
+                   floatValue:(CBORFloat64)value;
 
 /// 构建整数 或 半精度浮点数
 - (instancetype)initWithMajor:(CBORMajorType)major

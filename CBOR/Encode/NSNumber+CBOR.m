@@ -90,14 +90,6 @@ static CBORNumberEncodingType CBORNumberEncodingTypeWithNumber(NSNumber *number)
     return CBORNumberEncodingTypeUnknown;
 }
 
-/// 判断浮点数是否可用半精度表示
-static inline bool CBORIsHalfValue(float value) {
-    int intValue = (int)floorf(value);
-    // 确定没有小数点
-    if (intValue != value) { return false; }
-    // 确定在区间内
-    return intValue >= CBORHalfValueMin && intValue <= CBORHalfValueMax;
-}
 
 @implementation NSNumber (CBOR)
 
@@ -163,8 +155,8 @@ static inline bool CBORIsHalfValue(float value) {
             CBORMinorType minorType = CBORTypeMinor(major);
             
             switch (tag) {
-                case CBORTagTypeEpochBasedDateTime: {
-                    // 时间戳
+                case CBORTagTypeEpochBasedDateTime: // 时间戳
+                case CBORTagTypeDaysSinceEpochDate: /* 自1970-1-1天数差 */ {
                     return [[CBORTag alloc] initWithMajor:majorType
                                                       tag:tag
                                                     value:[self cborObjectWithMinor:minorType]];
@@ -187,19 +179,8 @@ static inline bool CBORIsHalfValue(float value) {
     
     switch (type) {
         case CBORNumberEncodingTypeFloat:
-            // 判断是否是半精度
-            if (CBORIsHalfValue([self floatValue]) || (isinf([self floatValue]) || isnan([self floatValue]))) {
-                return [[CBORNumber alloc] initWithMajor:CBORMajorTypeAdditional
-                                                   minor:CBORAdditionalTypeHalf
-                                              floatValue:[self floatValue]];
-            }
-           
-            return [[CBORNumber alloc] initWithMajor:CBORMajorTypeAdditional
-                                               minor:CBORAdditionalTypeFloat
-                                          floatValue:[self floatValue]];
         case CBORNumberEncodingTypeDouble:
             return [[CBORNumber alloc] initWithMajor:CBORMajorTypeAdditional
-                                               minor:CBORAdditionalTypeDouble
                                           floatValue:[self doubleValue]];
         case CBORNumberEncodingTypeCharOrBool:
             return [[CBORSimple alloc] initWithMajor:CBORMajorTypeAdditional
