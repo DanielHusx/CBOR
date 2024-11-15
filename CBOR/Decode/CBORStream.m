@@ -33,6 +33,18 @@ type ret = 0; \
 [reversed getBytes:&ret length:length]; \
 return ret;
 
+#define CBOR_POP_VALUE_ERROR(type) \
+NSUInteger length = sizeof(type); \
+NSData *data; \
+BOOL ret = [self popDataWithLength:length data:&data]; \
+if (!ret) return NO; \
+NSData *reversed = [self reversedWithData:data]; \
+if (![reversed length]) return NO; \
+type _value = 0; \
+[reversed getBytes:&_value length:length]; \
+if (value) *value = _value; \
+return YES;
+
 @interface CBORStream()
 
 /// 数据源
@@ -76,6 +88,44 @@ return ret;
 - (Float32)popFloat32 { CBOR_POP_VALUE(Float32) }
 - (Float64)popFloat64 { CBOR_POP_VALUE(Float64) }
 
+/// 弹出数据
+- (BOOL)popDataWithLength:(NSUInteger)length
+                     data:(NSData * _Nullable * _Nullable)data {
+    if ([self isOverflowWithLength:length]) return NO;
+    
+    NSData *ret = [_source subdataWithRange:NSMakeRange(_index, length)];
+    if (data) *data = ret;
+    
+    // 读取完数据后移动偏移长度
+    _index += MAX(length, 1);
+    
+    return YES;
+}
+
+- (BOOL)popUInt8:(UInt8 *)value { CBOR_POP_VALUE_ERROR(UInt8); }
+- (BOOL)popUInt16:(UInt16 *)value { CBOR_POP_VALUE_ERROR(UInt16) }
+- (BOOL)popUInt32:(UInt32 *)value { CBOR_POP_VALUE_ERROR(UInt32) }
+- (BOOL)popUInt64:(UInt64 *)value { CBOR_POP_VALUE_ERROR(UInt64) }
+
+- (BOOL)popFloat16:(Float16 *)value { return [self popUInt16:value]; }
+- (BOOL)popFloat32:(Float32 *)value { CBOR_POP_VALUE_ERROR(Float32) }
+- (BOOL)popFloat64:(Float64 *)value { CBOR_POP_VALUE_ERROR(Float64) }
+
+- (BOOL)popBytes:(UInt64 *)value length:(NSUInteger)length {
+    NSData *data;
+    BOOL ret = [self popDataWithLength:length data:&data];
+    if (!ret) return NO;
+    
+    NSData *reversed = [self reversedWithData:data];
+    if (![reversed length]) return NO;
+    
+    UInt64 _value = 0;
+    [reversed getBytes:&_value length:length];
+    
+    if (value) *value = _value;
+    
+    return YES;
+}
 
 // MARK: - Private
 /// 校验读取区间是否溢出数据长度

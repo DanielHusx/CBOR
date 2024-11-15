@@ -34,19 +34,21 @@ NS_ASSUME_NONNULL_BEGIN
 /// 初始化数据
 - (instancetype)initWithData:(NSData *)data;
 
+
 /// 弹出数据
-- (nullable NSData *)popDataWithLength:(NSUInteger)length;
+- (BOOL)popDataWithLength:(NSUInteger)length
+                     data:(NSData * _Nullable * _Nullable)data;
 
+- (BOOL)popUInt8:(UInt8 * _Nullable)value;
+- (BOOL)popUInt16:(UInt16 * _Nullable)value;
+- (BOOL)popUInt32:(UInt32 * _Nullable)value;
+- (BOOL)popUInt64:(UInt64 * _Nullable)value;
 
-- (UInt8)popUInt8;
-/// 已处理大端转小端
-- (UInt16)popUInt16;
-- (UInt32)popUInt32;
-- (UInt64)popUInt64;
+- (BOOL)popFloat16:(Float16 *)value;
+- (BOOL)popFloat32:(Float32 *)value;
+- (BOOL)popFloat64:(Float64 *)value;
 
-- (Float16)popFloat16;
-- (Float32)popFloat32;
-- (Float64)popFloat64;
+- (BOOL)popBytes:(UInt64 *)value length:(NSUInteger)length;
 
 @end
 

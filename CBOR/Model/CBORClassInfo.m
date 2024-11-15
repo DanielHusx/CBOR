@@ -603,7 +603,41 @@ static inline BOOL CBOREncodingTypeIsCNumber(CBOREncodingType type) {
         }
         curClassInfo = curClassInfo.superClassInfo;
     }
-    if (allPropertyMetas.count) _allPropertyMetas = allPropertyMetas.allValues.copy;
+    
+    if (allPropertyMetas.count) {
+        NSArray *sequeueNames;
+        
+        if ([cls respondsToSelector:@selector(modelCustomPropertySequeue)]) {
+            sequeueNames = [(id <CBORModel>)cls modelCustomPropertySequeue];
+        }
+        
+        if (sequeueNames.count) {
+            NSArray *sortedKeys = [allPropertyMetas.allKeys sortedArrayUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
+                NSUInteger index1 = [sequeueNames indexOfObject:obj1];
+                NSUInteger index2 = [sequeueNames indexOfObject:obj2];
+                
+                if (index1 != NSNotFound && index2 != NSNotFound) {
+                    // 存在顺序则按照此顺序
+                    return (index1 < index2) ? NSOrderedAscending : NSOrderedDescending;
+                } else if (index1 == NSNotFound) {
+                    // 当排在前面的不存在顺序则置后
+                    return NSOrderedDescending;
+                } else {
+                    // 排在后面不存在顺序或都不存在顺序则保持不变
+                    return NSOrderedAscending;
+                }
+            }];
+            
+            NSMutableArray *sortedAllPropertyMetas = [NSMutableArray arrayWithCapacity:sortedKeys.count];
+            for (NSString *key in sortedKeys) {
+                [sortedAllPropertyMetas addObject:allPropertyMetas[key]];
+            }
+            
+            _allPropertyMetas = sortedAllPropertyMetas.copy;
+        } else {
+            _allPropertyMetas = allPropertyMetas.allValues.copy;
+        }
+    }
     
     // create mapper
     NSMutableDictionary *mapper = [NSMutableDictionary new];
