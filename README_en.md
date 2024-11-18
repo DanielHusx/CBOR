@@ -1,13 +1,13 @@
 # CBOR
 
-用Objective-C原生实现 [CBOR (RFC 7049 Concise Binary Object Representation)](http://cbor.io/) 编解码
+A [CBOR (RFC 7049 Concise Binary Object Representation)](http://cbor.io/) decoder and encoder in Objective-C.
 
-- 支持半精度
-- 支持最优最短编码（默认）
-- 支持对象属性构建编码顺序控制
-- 建议使用[cbor.me](http://cbor.me/)进行检验编解码结果
-- 支持原生数据类型进行CBOR编解码
-  - 基础数据类型，例如：NSInteger, NSUInteger, float, double, BOOL等等
+- Support half floats.
+- Support the best shortest encoding (default)
+- Support object attribute construction encoding order control
+- [cbor.me](http://cbor.me/) is recommended for viewing your CBOR-encoded data.
+- Support native data types for CBOR encoding and decoding
+  - Basic data types, such as: NSInteger, NSUInteger, float, double, BOOL, etc.
   - NSNumber
   - NSArray
   - NSDictionary
@@ -15,11 +15,11 @@
   - NSString
   - NSDate
   - NSNull
-- 支持实现CBORModel协议对象进行CBOR编解码
+- Support CBOR encoding and decoding by implementing CBORModel protocol objects
 
-[英文README](./README_en.md)
+[Chinese README](./README.md)
 
-## 安装方式
+## Installation
 
 - CocoaPods
 
@@ -29,9 +29,9 @@
 
   
 
-## 解码
+## Decoding
 
-#### 解析为原生对象
+#### Parse to nsobject
 
 - `+[CBORParser decodeData:]`
 
@@ -47,12 +47,11 @@ Byte raw[] = {
   0x41, 0x42, 0x43, // @"ABC"
   0xff // indefinite end
 };
-
 id ret = [CBORParser decodeData:[NSData dataWithBytes:&raw length:sizeof(raw)]];
-// ret is @[@(255), @[@(1), @"ABC"], @"ABC"]  
+// ret is [@(255), @[@(1), @"ABC"], @"ABC"]          
 ```
 
-#### 解析为指定对象
+#### Parse to the specified object
 
 - `+[CBORParser decodeClass:fromData:]`
 
@@ -77,24 +76,24 @@ id ret = [CBORParser decodeClass:[MyModel class] fromData:[NSData dataWithBytes:
 
 
 
-## 编码
+## Encoding
 
-#### 自定义编码原生对象
+#### Custom encoding native objects
 
 - `[CBORParser encodeObject:major:minor:]`
 
 ```objective-c
-// obj can be NSObject, NSData, NSDate, NSNumber, NSString, NSArray, NSDictionary, NSNull...
+// obj canb be NSObject, NSData, NSDate, NSNumber, NSString, NSArray, NSDictionary, NSNull...
 [CBORParser encodeObject:@(1)]; // 0x01
 [CBORParser encodeObject:@(1) major:CBORMajorTypeUnsigned minor:CBORLengthTypeUInt8]; // 0x18, 0x01
-[CBORParser encodeObject:@(1) major:CBORMajorTypeAdditional]; // 0xe1 (simple value 1)
+[CBORParser encodeObject:@(1) major:CBORMajorTypeAdditional]; // 0xe1
+
 ```
 
-#### 对实现CBORModel协议对象编码
+### CBORModel Protocol
 
--   自定义属性的Major/Minor类型
--   自定义属性的顺序
--   JSON编解码；参考： [YYModel](https://github.com/ibireme/YYModel)
+-   Custom major/minor type and property-ordered
+-   JSON Codec refer [YYModel](https://github.com/ibireme/YYModel)
 
 ```objective-c
 #import "CBOR.h"

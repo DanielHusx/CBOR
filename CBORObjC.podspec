@@ -1,6 +1,6 @@
 Pod::Spec.new do |spec|
   spec.name         = "CBORObjC"
-  spec.version      = "1.0.1"
+  spec.version      = "1.0.2"
   spec.summary      = "A CBOR implementation in Objective-C"
   spec.description  = <<-DESC
   A CBOR Concise Binary Object Representation decoder and encoder in Objective-C.
@@ -18,7 +18,9 @@ Pod::Spec.new do |spec|
   spec.source       = { :git => "https://github.com/DanielHusx/CBOR.git", :tag => "#{spec.version}" }
 
   spec.source_files  = "CBOR/CBOR.h", "CBOR/**/*.{h,m}"
-  spec.public_header_files = "CBOR/Public/*.h"
+  spec.public_header_files = "CBOR/CBOR.h", "CBOR/Public/*.h"
+  spec.private_header_files = 'CBOR/CBORObject/*.{h,m}', 'CBOR/Decode/*.{h,m}', 'CBOR/Encode/*.{h,m}', 'CBOR/Model/*.{h,m}'
+  
   
   spec.requires_arc = true
 end
