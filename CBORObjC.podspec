@@ -19,7 +19,7 @@ Pod::Spec.new do |spec|
 
   spec.source_files  = "CBOR/CBOR.h", "CBOR/**/*.{h,m}"
   spec.public_header_files = "CBOR/CBOR.h", "CBOR/Public/*.h"
-  spec.private_header_files = 'CBOR/CBORObject/*.{h,m}', 'CBOR/Decode/*.{h,m}', 'CBOR/Encode/*.{h,m}', 'CBOR/Model/*.{h,m}'
+  spec.private_header_files = 'CBOR/CBORObject/*.h', 'CBOR/Decode/*.h', 'CBOR/Encode/*.h', 'CBOR/Model/*.h'
   
   
   spec.requires_arc = true
