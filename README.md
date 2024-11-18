@@ -3,6 +3,7 @@
 A [CBOR (RFC 7049 Concise Binary Object Representation)](http://cbor.io/) decoder and encoder in Objective-C.
 
 - support half floats.
+- support property-ordered
 - [cbor.me](http://cbor.me/) is recommended for viewing your CBOR-encoded data.
 
 
@@ -50,6 +51,9 @@ id ret = [CBORParser decodeData:[NSData dataWithBytes:&raw length:sizeof(raw)]];
 ```
 
 ### CBORModel Protocol
+
+-   Custom major/minor type and property-ordered
+-   JSON Codec refer [YYModel](https://github.com/ibireme/YYModel)
 
 ```objective-c
 #import "CBOR.h"

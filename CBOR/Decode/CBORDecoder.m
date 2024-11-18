@@ -45,17 +45,21 @@ static inline bool CBORMinorIsInValueRange(CBORByte minor) {
 
 
 /// 根据次要类型读取长度或实际值
-static CBORUInt64 CBORReadValueOrLength(CBORStream *stream, CBORMinorType value) {
-    if (value <= CBORLengthTypeMaxValue) { return value; }
+static BOOL CBORReadValueOrLength(CBORStream *stream, CBORMinorType minor, CBORUInt64 *value) {
+    if (minor <= CBORLengthTypeMaxValue) {
+        if (value) *value = minor;
+        return YES;
+    }
     
-    CBORLengthType type = CBORLengthTypeWithMinor(value);
+    CBORLengthType type = CBORLengthTypeWithMinor(minor);
     switch (type) {
-        case CBORLengthTypeUInt8: return [stream popUInt8];
-        case CBORLengthTypeUInt16: return [stream popUInt16];
-        case CBORLengthTypeUInt32: return [stream popUInt32];
-        case CBORLengthTypeUInt64: return [stream popUInt64];
+        case CBORLengthTypeUInt8:
+        case CBORLengthTypeUInt16:
+        case CBORLengthTypeUInt32:
+        case CBORLengthTypeUInt64:
+            return [stream popBytes:value length:(type & 0x3) + 1];
         default:
-            return 0;
+            return NO;
     }
 }
 
@@ -65,7 +69,9 @@ static CBORObject * CBORArrayUntilBreak(CBORStream *stream, CBORMajorType major,
 
 /// 数据转CBOR
 static CBORObject * CBORDecodeData(CBORStream *stream) {
-    CBORByte byte = [stream popUInt8];
+    CBORByte byte = 0;
+    if (![stream popUInt8:&byte]) { return nil; }
+    
     CBORMajorType majorType = CBORTypeMajor(byte);
     CBORByte minorType = CBORTypeMinor(byte);
     
@@ -75,7 +81,9 @@ static CBORObject * CBORDecodeData(CBORStream *stream) {
         case CBORMajorTypeNegative: {
             if (!CBORMinorIsInValueRange(minorType)) { return nil; }
             
-            CBORUInt64 value = CBORReadValueOrLength(stream, minorType);
+            CBORUInt64 value;
+            if (!CBORReadValueOrLength(stream, minorType, &value)) { return nil; }
+            
             return [[CBORNumber alloc] initWithMajor:majorType
                                                minor:minorType
                                        unsignedValue:value];
@@ -91,8 +99,11 @@ static CBORObject * CBORDecodeData(CBORStream *stream) {
             
             if (!CBORMinorIsInValueRange(minorType)) { return nil; }
             
-            CBORUInt64 length = CBORReadValueOrLength(stream, minorType);
-            NSData *value = [stream popDataWithLength:length];
+            CBORUInt64 length;
+            if (!CBORReadValueOrLength(stream, minorType, &length)) { return nil; }
+            
+            NSData *value;
+            if (![stream popDataWithLength:length data:&value]) { return nil; }
             if (!value) { return nil; }
             
             return [[CBORArray alloc] initWithMajor:majorType
@@ -106,7 +117,9 @@ static CBORObject * CBORDecodeData(CBORStream *stream) {
                 return CBORArrayUntilBreak(stream, majorType, NO);
             }
             
-            CBORUInt64 length = CBORReadValueOrLength(stream, minorType);
+            CBORUInt64 length;
+            if (!CBORReadValueOrLength(stream, minorType, &length)) { return nil; }
+            
             CBORArray *ret = [[CBORArray alloc] initWithMajor:majorType
                                                         minor:minorType];
             
@@ -128,10 +141,12 @@ static CBORObject * CBORDecodeData(CBORStream *stream) {
             
             if (!CBORMinorIsInValueRange(minorType)) { return nil; }
             
-            UInt64 length = CBORReadValueOrLength(stream, minorType);
+            CBORUInt64 length = 0;
+            if (!CBORReadValueOrLength(stream, minorType, &length)) { return nil; }
+            
             CBORMap *ret = [[CBORMap alloc] initWithMajor:majorType minor:minorType];
             
-            for (UInt64 index = 0; index < length; index++) {
+            for (CBORUInt64 index = 0; index < length; index++) {
                 CBORObject *key = CBORDecodeData(stream);
                 if (!key) { return nil; }
                 
@@ -147,7 +162,9 @@ static CBORObject * CBORDecodeData(CBORStream *stream) {
         case CBORMajorTypeTag: {
             if (!CBORMinorIsInValueRange(minorType)) { return nil; }
             
-            CBORTagType tag = CBORReadValueOrLength(stream, minorType);
+            CBORTagType tag;
+            if (!CBORReadValueOrLength(stream, minorType, &tag)) { return nil; }
+            
             CBORObject *value = CBORDecodeData(stream);
             
             if (!value) { return nil; }
@@ -159,19 +176,31 @@ static CBORObject * CBORDecodeData(CBORStream *stream) {
             // 浮点数或简单类型
         case CBORMajorTypeAdditional: {
             switch (minorType) {
-                case CBORAdditionalTypeHalf:
+                case CBORAdditionalTypeHalf: {
+                    Float16 value = 0;
+                    if (![stream popFloat16:&value]) { return nil; }
+                    
                     // 解码时的值需要转化，所以传无符号整数进一步内部转化为半精度
                     return [[CBORNumber alloc] initWithMajor:majorType
                                                        minor:minorType
-                                               unsignedValue:[stream popFloat16]];
-                case CBORAdditionalTypeFloat:
+                                               unsignedValue:value];
+                }
+                case CBORAdditionalTypeFloat: {
+                    Float32 value = 0;
+                    if (![stream popFloat32:&value]) { return nil; }
+                    
                     return [[CBORNumber alloc] initWithMajor:majorType
                                                        minor:minorType
-                                                  floatValue:[stream popFloat32]];
-                case CBORAdditionalTypeDouble:
+                                                  floatValue:value];
+                }
+                case CBORAdditionalTypeDouble: {
+                    Float64 value = 0;
+                    if (![stream popFloat64:&value]) { return nil; }
+                    
                     return [[CBORNumber alloc] initWithMajor:majorType
                                                        minor:minorType
-                                                  floatValue:[stream popFloat64]];
+                                                  floatValue:value];
+                }
                 case CBORAdditionalTypeBreak:
                 case CBORAdditionalTypeNull:
                 case CBORAdditionalTypeFalse:
@@ -181,7 +210,8 @@ static CBORObject * CBORDecodeData(CBORStream *stream) {
                                                         minor:minorType];
                 default: {
                     // 简单值
-                    CBORUInt64 value = CBORReadValueOrLength(stream, minorType);
+                    CBORUInt64 value;
+                    if (!CBORReadValueOrLength(stream, minorType, &value)) { return nil; }
                     // 是否处于简单值区间
                     if (!CBORIsSimpleValue(value)) { return nil; }
                     

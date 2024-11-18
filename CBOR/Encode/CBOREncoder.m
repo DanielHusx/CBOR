@@ -36,7 +36,8 @@ extern NSNumber *CBORModelCreateNumberFromProperty(__unsafe_unretained id model,
 
 /// 循环模型转CBOR对象
 static CBORObject * CBOREncodeObject(NSObject *model, CBORMajorType major, CBORMinorType minor) {
-    if (!model || model == (id)kCFNull) return [[NSNull null] cborObjectWithMajor:major minor:minor];
+    if (!model) { return nil; }
+    if (model == (id)kCFNull) return [[NSNull null] cborObjectWithMajor:major minor:minor];
     if ([(id<CBOREncodable>)model respondsToSelector:@selector(cborObjectWithMajor:minor:context:)]) {
         return [(id<CBOREncodable>)model cborObjectWithMajor:major
                                                        minor:minor
@@ -54,7 +55,7 @@ static CBORObject * CBOREncodeObject(NSObject *model, CBORMajorType major, CBORM
     CBORMap *ret = [[CBORMap alloc] initWithMajor:CBORMajorTypeMap minor:0];
     __unsafe_unretained CBORMap *temp = ret;
     // 遍历属性
-    [modelMeta->_mapper enumerateKeysAndObjectsUsingBlock:^(NSString *propertyMappedKey, CBORModelPropertyMeta *propertyMeta, BOOL *stop) {
+    [modelMeta->_allPropertyMetas enumerateObjectsUsingBlock:^(CBORModelPropertyMeta *propertyMeta, NSUInteger idx, BOOL * _Nonnull stop) {
         // 属性不可获取则跳过
         if (!propertyMeta->_getter) return;
         

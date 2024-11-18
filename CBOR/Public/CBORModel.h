@@ -35,7 +35,8 @@ NS_ASSUME_NONNULL_BEGIN
 ///
 /// - Attentions: 务必存在对应Major，否则设置无效
 + (nullable NSDictionary<NSString *, NSNumber *> *)modelCustomPropertyMinor;
-
+/// 自定义属性构建CBOR时的顺序
++ (nullable NSArray <NSString *> *)modelCustomPropertySequeue;
 
 /// 自定义属性替换对应JSON的Key列表，例如： `@{@"desc"  : @"ext.desc", @"bookID": @[@"id", @"ID", @"book_id"]};`
 + (nullable NSDictionary<NSString *, id> *)modelCustomPropertyMapper;
