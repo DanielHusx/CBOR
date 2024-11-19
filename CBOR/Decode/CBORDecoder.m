@@ -57,7 +57,7 @@ static BOOL CBORReadValueOrLength(CBORStream *stream, CBORMinorType minor, CBORU
         case CBORLengthTypeUInt16:
         case CBORLengthTypeUInt32:
         case CBORLengthTypeUInt64:
-            return [stream popBytes:value length:(type & 0x3) + 1];
+            return [stream popBytes:value length:pow(2, (type & 0x3))];
         default:
             return NO;
     }

@@ -44,6 +44,12 @@
     };
 }
 
++ (NSArray<NSString *> *)modelCustomPropertySequeue {
+    return @[
+        @"dateValue", @"tagValue", @"uintValue", @"stringValue", @"floatValue", @"doubleValue"
+    ];
+}
+
 + (NSArray<NSString *> *)modelPropertyBlacklist {
     return @[@"ignoredValue"];
 }
@@ -83,7 +89,7 @@
     value.doubleValue = 1.0;
     value.stringValue = @"s";
     value.tagValue = @"t";
-    value.dateValue = nil;//[NSDate dateWithTimeIntervalSince1970:1363896240];
+    value.dateValue = [NSNull null];//[NSDate dateWithTimeIntervalSince1970:1363896240];
     value.ignoredValue = @"ignored";
     
     NSData *data = CBORData
