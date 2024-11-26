@@ -117,6 +117,8 @@ static CBORObject * CBORDecodeData(CBORStream *stream) {
                 return CBORArrayUntilBreak(stream, majorType, NO);
             }
             
+            if (!CBORMinorIsInValueRange(minorType)) { return nil; }
+            
             CBORUInt64 length;
             if (!CBORReadValueOrLength(stream, minorType, &length)) { return nil; }
             

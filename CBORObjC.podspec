@@ -1,6 +1,6 @@
 Pod::Spec.new do |spec|
   spec.name         = "CBORObjC"
-  spec.version      = "1.0.3"
+  spec.version      = "1.0.4"
   spec.summary      = "A CBOR implementation in Objective-C"
   spec.description  = <<-DESC
   A CBOR Concise Binary Object Representation decoder and encoder in Objective-C.

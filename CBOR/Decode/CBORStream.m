@@ -91,6 +91,11 @@ return YES;
 /// 弹出数据
 - (BOOL)popDataWithLength:(NSUInteger)length
                      data:(NSData * _Nullable * _Nullable)data {
+    if (!length) {
+        if (data) *data = [NSData data];
+        return YES;
+    }
+    
     if ([self isOverflowWithLength:length]) return NO;
     
     NSData *ret = [_source subdataWithRange:NSMakeRange(_index, length)];
